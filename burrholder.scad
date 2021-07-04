@@ -10,6 +10,8 @@ bottom_thickness = 1.5; // [1:0.1:2]
 middle_h = 2;
 bottom_h = 14;
 
+side_holder_length = 1.2; // [1:0.1:2]
+
 cutouts = "slits"; // ["slits", "original"]
 debug_visualize_cutouts = 0; // [0, 1]
 
@@ -78,11 +80,11 @@ module millstone_retaining_tabs() {
     t_y = outer_dia/2 - bottom_thickness;
     translate([-3.75,t_y,5.5])
     rotate([90,0,0])
-    prism(7.5, 1.5, 1.7);
+    prism(7.5, 1.5, side_holder_length);
     
     translate([3.75,-t_y,5.5])
     rotate([90,0,180])
-    prism(7.5, 1.5, 1.7);
+    prism(7.5, 1.5, side_holder_length);
 }
 module bottom_parts() {
     difference() {
