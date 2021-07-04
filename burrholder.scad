@@ -108,19 +108,19 @@ module millstone_holders() {
 module side_millstone_holders() {
     translate([21.5,-12,12])
     rotate([0,90,0])
-    prism(3,4,2);
+    prism(bottom_h - middle_h,10,4);
     
-    translate([21.5,12,9])
+    translate([21.5,12,0])
     rotate([0,-90,180])
-    prism(3,4,2);
+    prism(bottom_h - middle_h,10,4);
     
     translate([-21.5,12,12])
     rotate([0,90,180])
-    prism(3,4,2);
+    prism(bottom_h - middle_h,10,4);
     
-    translate([-21.5,-12,9])
+    translate([-21.5,-12,0])
     rotate([0,-90,0])
-    prism(3,4,2);
+    prism(bottom_h - middle_h,10,4);
 }
 
 module body() {
