@@ -4,6 +4,11 @@ $fs = 0.4;
 //height (thickness) of 3 side tabs
 tab_mid_h = 0.8; //[0.5:0.1:2]
 
+outer_dia = 52; // [51:0.05:53]
+bottom_thickness = 1.5; // [1:0.1:2]
+
+bottom_h = 14;
+
 // https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Primitive_Solids
 module prism(l, w, h){
    polyhedron(
@@ -76,9 +81,9 @@ module millstone_retaining_tabs() {
 }
 module bottom_parts() {
     difference() {
-        cylinder(r=25.75, h=14);
+        cylinder(r=outer_dia/2, h=bottom_h);
         translate([0,0,-0.05])
-        cylinder(r=24.25, h=14.1);
+        cylinder(r=(outer_dia/2) - bottom_thickness, h=bottom_h + 0.1);
     }
 }
 module millstone_holders() {
