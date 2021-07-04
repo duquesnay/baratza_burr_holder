@@ -75,11 +75,12 @@ module middle_tabs() {
     cube([3.5,8.5,tab_mid_h]);
 }
 module millstone_retaining_tabs() {
-    translate([-3.75,24,5.5])
+    t_y = outer_dia/2 - bottom_thickness;
+    translate([-3.75,t_y,5.5])
     rotate([90,0,0])
     prism(7.5, 1.5, 1.7);
     
-    translate([3.75,-24,5.5])
+    translate([3.75,-t_y,5.5])
     rotate([90,0,180])
     prism(7.5, 1.5, 1.7);
 }
