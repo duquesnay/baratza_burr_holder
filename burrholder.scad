@@ -86,6 +86,14 @@ module bottom_parts() {
         cylinder(r=(outer_dia/2) - bottom_thickness, h=bottom_h + 0.1);
     }
 }
+module support_ring() {
+    difference() {
+        cylinder(r=outer_dia/2, bottom_h);
+        translate([0,0,-0.5])
+        cylinder(r=(outer_dia/2)-0.4, bottom_h+1);
+    }
+}
+
 module millstone_holders() {
     translate([21.5,-3,0])
     cube([3,6,12.05]);
@@ -132,12 +140,7 @@ module body() {
     side_millstone_holders();
 }
  
-module cutouts() {
-    // výřezy
-    // cutouts
-
-    // západka na mlecí kámen
-    // millstone retaining tab cutout
+module millstone_retainting_tab_cutouts() {
     translate([-4.5,-26.5,-0.05])
     union() {
         cube([9,3,5.5]);
@@ -155,7 +158,9 @@ module cutouts() {
         translate([8.25,0,5.45])
         cube([0.75,3,5.5]);
     }
-    
+}
+
+module top_cutouts() {
     // postranní výřezy na zásobník zrn
     // top cutouts
     translate([-25.5,-1.5,7])
@@ -165,9 +170,13 @@ module cutouts() {
     cube([2,3,7.05]);
 }
 
+union() {
+    difference() {
 
-difference() {
+        body();
+        top_cutouts();
+        millstone_retainting_tab_cutouts();
+    }
 
-    body();
-    cutouts(); 
+    //support_ring();
 }
