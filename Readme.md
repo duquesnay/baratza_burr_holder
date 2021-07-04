@@ -32,4 +32,4 @@ To print with different settings some parameters should be adjusted:
 
 ## License
 
-<https://creativecommons.org/licenses/by-nc-sa/4.0/>
+Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0) <https://creativecommons.org/licenses/by-nc-sa/4.0/>
