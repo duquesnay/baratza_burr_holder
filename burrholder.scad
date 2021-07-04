@@ -7,6 +7,7 @@ tab_mid_h = 0.8; //[0.5:0.1:2]
 outer_dia = 51.6; // [51:0.05:53]
 bottom_thickness = 1.5; // [1:0.1:2]
 
+middle_h = 2;
 bottom_h = 14;
 
 cutouts = "slits"; // ["slits", "original"]
@@ -54,9 +55,9 @@ module top_part() {
 }
 module middle_part() {
     difference() {
-        cylinder(r=25.5, h=2);
+        cylinder(r=25.5, h=middle_h);
         translate([0,0,-0.05])
-        cylinder(r=20,h=2.1);
+        cylinder(r=20,h=middle_h+0.1);
     }
 }
 module middle_tabs() {
@@ -123,20 +124,26 @@ module side_millstone_holders() {
 }
 
 module body() {
-    translate([0,0,14])
+    translate([0,0,bottom_h])
     upper_tabs();
     
-    translate([0,0,14])
+    translate([0,0,bottom_h])
+    color("green")
     top_part();
+    color("yellow")
     
     middle_tabs();
 
-    translate([0,0,12])
+    translate([0,0,bottom_h - middle_h])
+    color("blue")
     middle_part();
+    color("yellow")
 
     millstone_retaining_tabs();
 
+    color("orange")
     bottom_parts();
+    color("yellow")
 
     millstone_holders();
 
@@ -166,10 +173,9 @@ module millstone_retainting_tab_cutouts() {
 module millstone_cutouts_slits() {
     translate([-4.5,-26.5,-0.05])
     union() {
-//        translate([0,0,5.45])
-        cube([0.75,3,12]);
+        cube([0.75,3,bottom_h - middle_h]);
         translate([8.25,0,0])
-        cube([0.75,3,12]);
+        cube([0.75,3,bottom_h - middle_h]);
     }
  
 }
