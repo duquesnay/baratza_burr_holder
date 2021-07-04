@@ -10,10 +10,10 @@ difference() {
         translate([0,0,14])
         union() {
             rotate([0,0,45])
-            translate([-2,-25,0])
+            translate([-2,-26,0])
             union() {
                 translate([1,1,0])
-                cube([2,2,2]);
+                cube([2,3,2]);
                 cube([4,2,5]);
                 translate([0,0,3.5])
                 rotate([45,0,0])
@@ -21,10 +21,10 @@ difference() {
             }
             
             rotate([0,0,225])
-            translate([-2,-25,0])
+            translate([-2,-26,0])
             union() {
                 translate([1,1,0])
-                cube([2,2,2]);
+                cube([2,3,2]);
                 cube([4,2,5]);
                 translate([0,0,3.5])
                 rotate([45,0,0])
@@ -45,15 +45,15 @@ difference() {
         // middle tabs
         union() {
             translate([-28,-4.25,5.5])
-            cube([3.5,8.5,1.4]);
+            cube([3.5,8.5,1.0]);
             
             translate([16,-23.75,5.5])
             rotate([0,0,115])
-            cube([3.5,8.5,1.4]);
+            cube([3.5,8.5,1.0]);
             
             translate([11,26.25,5.5])
             rotate([0,0,240])
-            cube([3.5,8.5,1.4]);
+            cube([3.5,8.5,1.0]);
         }
         
         // prostřední část
@@ -68,11 +68,11 @@ difference() {
         // zobáčky na mlecí kámen
         // millstone retaining tabs
         union() {
-            translate([-3.75,24.5,5.5])
+            translate([-3.75,24,5.5])
             rotate([90,0,0])
             prism(7.5, 1.5, 1.7);
             
-            translate([3.75,-24.5,5.5])
+            translate([3.75,-24,5.5])
             rotate([90,0,180])
             prism(7.5, 1.5, 1.7);
         }
@@ -80,9 +80,9 @@ difference() {
         // spodní část
         // bottom parts
         difference() {
-            cylinder(r=25.5, h=14);
+            cylinder(r=26, h=14);
             translate([0,0,-0.05])
-            cylinder(r=24.5, h=14.1);
+            cylinder(r=24.0, h=14.1);
         }
         
         // příruba na mlecí kámen
