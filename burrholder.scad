@@ -1,6 +1,8 @@
 $fa = 0.1;
 $fs = 0.4;
 
+//height (thickness) of 3 side tabs
+tab_mid_h = 0.8; //[0.5:0.1:2]
 difference() {
 
     union() {
@@ -45,15 +47,15 @@ difference() {
         // middle tabs
         union() {
             translate([-28,-4.25,5.5])
-            cube([3.5,8.5,1.0]);
+            cube([3.5,8.5,tab_mid_h]);
             
             translate([16,-23.75,5.5])
             rotate([0,0,115])
-            cube([3.5,8.5,1.0]);
+            cube([3.5,8.5,tab_mid_h]);
             
             translate([11,26.25,5.5])
             rotate([0,0,240])
-            cube([3.5,8.5,1.0]);
+            cube([3.5,8.5,tab_mid_h]);
         }
         
         // prostřední část
@@ -80,9 +82,9 @@ difference() {
         // spodní část
         // bottom parts
         difference() {
-            cylinder(r=26, h=14);
+            cylinder(r=25.75, h=14);
             translate([0,0,-0.05])
-            cylinder(r=24.0, h=14.1);
+            cylinder(r=24.25, h=14.1);
         }
         
         // příruba na mlecí kámen
