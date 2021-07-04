@@ -19,3 +19,13 @@ Changes to model:
 - made side tabs thinner - i found they printed fine, instead i broke one off trying to grind/cut it down to fit
 
 Scad file is available on github <https://github.com/michaljbarczewski/baratza_burr_holder>
+
+### Print notes
+
+Default settings assume 0.2 layer height and 0.5 line width.
+I've printed with wall count of 6 to make sure part is fully solid with no infill.
+
+To print with different settings some parameters should be adjusted:
+
+- bottom_thickness - should be multiple of line width - this also affects fit of the burr so may take some trial and error
+- tab_mid_h - thickness of the 3 side tabs - should be multipole of layer height while also less than 1mm to fit into the grinder
