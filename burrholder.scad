@@ -131,22 +131,23 @@ module body() {
     color("green")
     top_part();
     color("yellow")
-    
+
     middle_tabs();
 
     translate([0,0,bottom_h - middle_h])
     color("blue")
     middle_part();
-    color("yellow")
 
+    color("Lime")
     millstone_retaining_tabs();
 
     color("orange")
     bottom_parts();
-    color("yellow")
 
+    color("Purple")
     millstone_holders();
 
+    color("Maroon")
     side_millstone_holders();
 }
  
@@ -205,10 +206,10 @@ union() {
 
     //support_ring();
     if ( debug_visualize_cutouts == 1) {
-        color("red")
+        color("red",0.3)
         millstone_cutouts_slits();
         rotate([0,0,180])
-        color("blue")
+        color("blue",0.3)
         millstone_cutouts_slits();
     }
 }
