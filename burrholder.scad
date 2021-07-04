@@ -181,13 +181,13 @@ module millstone_cutouts_slits() {
  
 }
 module top_cutouts() {
-    // postranní výřezy na zásobník zrn
-    // top cutouts
-    translate([-25.5,-1.5,7])
-    cube([2,3,7.05]);
-    
-    translate([23.5,-1.5,7])
-    cube([2,3,7.05]);
+    module top_cutout_cube() {
+        translate([23.5,-1.5,7])
+        cube([4,3,7.05]);
+    }
+    top_cutout_cube();
+    rotate([0,0,180])
+    top_cutout_cube();
 }
 
 union() {
