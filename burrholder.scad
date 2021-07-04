@@ -4,10 +4,13 @@ $fs = 0.4;
 //height (thickness) of 3 side tabs
 tab_mid_h = 0.8; //[0.5:0.1:2]
 
-outer_dia = 52; // [51:0.05:53]
+outer_dia = 51.6; // [51:0.05:53]
 bottom_thickness = 1.5; // [1:0.1:2]
 
 bottom_h = 14;
+
+cutouts = "slits"; // ["slits", "original"]
+debug_visualize_cutouts = 0; // [0, 1]
 
 // https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Primitive_Solids
 module prism(l, w, h){
@@ -160,6 +163,16 @@ module millstone_retainting_tab_cutouts() {
     }
 }
 
+module millstone_cutouts_slits() {
+    translate([-4.5,-26.5,-0.05])
+    union() {
+//        translate([0,0,5.45])
+        cube([0.75,3,12]);
+        translate([8.25,0,0])
+        cube([0.75,3,12]);
+    }
+ 
+}
 module top_cutouts() {
     // postranní výřezy na zásobník zrn
     // top cutouts
@@ -175,8 +188,21 @@ union() {
 
         body();
         top_cutouts();
-        millstone_retainting_tab_cutouts();
+        if ( cutouts == "original") {
+            millstone_retainting_tab_cutouts();
+        } else if (cutouts == "slits") {
+            millstone_cutouts_slits();
+            rotate([0,0,180])
+            millstone_cutouts_slits();
+        }
     }
 
     //support_ring();
+    if ( debug_visualize_cutouts == 1) {
+        color("red")
+        millstone_cutouts_v2();
+        rotate([0,0,180])
+        color("blue")
+        millstone_cutouts_v2();
+    }
 }
