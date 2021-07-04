@@ -200,9 +200,9 @@ union() {
     //support_ring();
     if ( debug_visualize_cutouts == 1) {
         color("red")
-        millstone_cutouts_v2();
+        millstone_cutouts_slits();
         rotate([0,0,180])
         color("blue")
-        millstone_cutouts_v2();
+        millstone_cutouts_slits();
     }
 }
