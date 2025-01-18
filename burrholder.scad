@@ -22,6 +22,32 @@ module prism(l, w, h){
     faces=[[0,1,2,3],[5,4,3,2],[0,4,5,1],[0,3,4],[5,2,1]]);
 }
 
+
+module beveled_tip(dimensions, initial_angle) {
+    width = dimensions[0];
+    depth = dimensions[1];
+    height = dimensions[2];
+    
+    bevel_angle=90-initial_angle;
+    extra_height = depth * tan(initial_angle);  // Extra height needed based on angle and depth
+    bevel_length = sqrt(width^2+height^2);  // Length needed to span depth in angled position
+    bevel_height = extra_height * cos(initial_angle);
+    
+    union() {
+        // Bevel
+        difference() {
+            // Add calculated extra height b
+        // Original cube
+            cube([width,depth,height+extra_height]);            
+            // Move to right corner and create cutting piece
+            translate([0,depth,height])
+            rotate([(bevel_angle),0,0])
+            cube([width,bevel_height,bevel_length]);  
+        }
+    }
+}
+
+
 module upper_tabs() {
     union() {
         rotate([0,0,45])
@@ -32,7 +58,7 @@ module upper_tabs() {
             cube([4,2,5]);
             translate([0,0,3.5])
             rotate([45,0,0])
-            cube([4,2,3]);
+            beveled_tip([4,2,3],45);
         }
         
         rotate([0,0,225])
@@ -43,10 +69,11 @@ module upper_tabs() {
             cube([4,2,5]);
             translate([0,0,3.5])
             rotate([45,0,0])
-            cube([4,2,3]);
+            beveled_tip([4,2,3],45);
         }
     }
 }
+
 
 module top_part() {
     difference() {
