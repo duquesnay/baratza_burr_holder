@@ -5,6 +5,8 @@ $fs = 0.4;
 tab_mid_h = 0.8; //[0.5:0.1:2]
 
 outer_dia = 51.6; // [51:0.05:53]
+top_radius = 22.5;
+
 bottom_thickness = 1.5; // [1:0.1:2]
 
 middle_h = 2;
@@ -14,63 +16,56 @@ side_holder_length = 1.2; // [1:0.1:2]
 
 cutouts = "slits"; // ["slits", "original"]
 debug_visualize_cutouts = 0; // [0, 1]
+top_part_height = 7;
 
 // https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Primitive_Solids
-module prism(l, w, h){
-   polyhedron(
-    points=[[0,0,0], [l,0,0], [l,w,0], [0,w,0], [0,w,h], [l,w,h]],
-    faces=[[0,1,2,3],[5,4,3,2],[0,4,5,1],[0,3,4],[5,2,1]]);
+module prism(l, w, h) {
+    polyhedron(
+    points = [[0, 0, 0], [l, 0, 0], [l, w, 0], [0, w, 0], [0, w, h], [l, w, h]],
+    faces = [[0, 1, 2, 3], [5, 4, 3, 2], [0, 4, 5, 1], [0, 3, 4], [5, 2, 1]]);
 }
 
+module create_tab(width, total_height) {
+    tip_angle = 45;
+    connector_width = 2;
+    tip_thickness = 2;
+    tip_angle_height = 5;
+    bevel_angle = 90 - tip_angle;
+    angle_part_height = total_height - tip_angle_height;
+    bevel_length = angle_part_height / cos(tip_angle) + tip_thickness * tan(tip_angle);
+    //this... could have been rough and simple
+    bevel_height = bevel_length * cos(tip_angle);
 
-module beveled_tip(dimensions, initial_angle) {
-    width = dimensions[0];
-    depth = dimensions[1];
-    height = dimensions[2];
-    
-    bevel_angle=90-initial_angle;
-    extra_height = depth * tan(initial_angle);  // Extra height needed based on angle and depth
-    bevel_length = sqrt(width^2+height^2);  // Length needed to span depth in angled position
-    bevel_height = extra_height * cos(initial_angle);
-    
-    union() {
-        // Bevel
-        difference() {
-            // Add calculated extra height b
-        // Original cube
-            cube([width,depth,height+extra_height]);            
-            // Move to right corner and create cutting piece
-            translate([0,depth,height])
-            rotate([(bevel_angle),0,0])
-            cube([width,bevel_height,bevel_length]);  
+    difference() {
+        tip_to_cylinder_spacing = 1;
+        union() {
+            translate([-connector_width / 2, 0, 0])
+                cube([connector_width, tip_to_cylinder_spacing, 2]); // joint tab, 2mm high, 3mm long
+            // tab origin
+            translate([-width / 2, tip_to_cylinder_spacing, 0])
+                //lower part of tab
+                cube([width, tip_thickness, tip_angle_height]); // 5mm high, 2mm deep
+            // upper part of tab, beveled at given height
+            translate([-width / 2, tip_to_cylinder_spacing, tip_angle_height])
+                rotate([-tip_angle, 0, 0])
+                    cube([width, tip_thickness, bevel_length]);
+            //random long length, can't be twise as long since it's thiner on other dimensions
         }
+        //cut at given heigth
+        translate([-width / 2 - 0.1, tip_to_cylinder_spacing, top_part_height]) cube([width + 0.2, bevel_length,
+            bevel_height]);
     }
 }
 
-
 module upper_tabs() {
     union() {
-        rotate([0,0,45])
-        translate([-2,-26,0])
-        union() {
-            translate([1,1,0])
-            cube([2,3,2]);
-            cube([4,2,5]);
-            translate([0,0,3.5])
-            rotate([45,0,0])
-            beveled_tip([4,2,3],45);
-        }
-        
-        rotate([0,0,225])
-        translate([-2,-26,0])
-        union() {
-            translate([1,1,0])
-            cube([2,3,2]);
-            cube([4,2,5]);
-            translate([0,0,3.5])
-            rotate([45,0,0])
-            beveled_tip([4,2,3],45);
-        }
+        rotate([0, 0, 45])
+            translate([0, top_radius, 0])
+                color("red") create_tab(width = 4, total_height = top_part_height);
+
+        rotate([0, 0, 225])
+            translate([0, top_radius, 0])
+                color("red") create_tab(width = 4, total_height = top_part_height);
     }
 }
 
