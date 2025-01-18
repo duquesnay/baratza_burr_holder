@@ -99,7 +99,6 @@ module shoulder_part() {
     }
 }
 module middle_tabss() {
-    // prostřední pacičky
     // middle tabs
     translate([-28, -4.25, 5.5])
         cube([3.5, 8.5, tab_mid_h]);
@@ -114,26 +113,23 @@ module middle_tabss() {
 }
 module millstone_retaining_tabs() {
     t_y = bottom_internal_radius;
-    translate([-3.75, t_y, 5.5])
-        rotate([90, 0, 0])
-            prism(7.5, 1.5, side_holder_length);
+    stone_thickness = 6.5;
+    stone_tab_h = bottom_h - stone_thickness;
+    stone_tab_width = 7.5;
 
-    translate([3.75, -t_y, 5.5])
-        rotate([90, 0, 180])
-            prism(7.5, 1.5, side_holder_length);
+    for (i = [0:1]) {
+        rotate([0, 0, i * 180])
+            translate([-stone_tab_width / 2, t_y, stone_tab_h])
+                rotate([90, 0, 0])
+                    prism(stone_tab_width, 1.5, side_holder_length);
+    }
+
 }
 module bottom_parts() {
     difference() {
         cylinder(r = bottom_radius, h = bottom_h); // refined to match mid cylinder
         translate([0, 0, -0.05])
             cylinder(r = bottom_internal_radius, h = bottom_h + 0.1);
-    }
-}
-module support_ring() {
-    difference() {
-        cylinder(r = bottom_radius, h = old_bottom_h);
-        translate([0, 0, -0.5])
-            cylinder(r = (bottom_radius) - 0.4, old_bottom_h + 1);
     }
 }
 
