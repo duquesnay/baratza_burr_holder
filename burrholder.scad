@@ -69,150 +69,160 @@ module upper_tabs() {
     }
 }
 
+module beveled_cylinder(r, h, b) {
+    union() {
+        cylinder(h=h-b, r=r);
+        translate([0, 0, h-b])
+            cylinder(h=b, r1=r, r2=r-b);
+    }
+}
+
 
 module top_part() {
     difference() {
-        cylinder(r=22.5, h=7);
-        translate([0,0,-0.05])
-        cylinder(r=20, h=4.1);
+        cylinder(r = 22.5, h = top_part_height);
+        translate([0, 0, -0.05])
+            cylinder(r = 20, h = top_part_height + 0.1);
     }
 }
 module middle_part() {
+    // TODO user parameter for diameter and thickness
     difference() {
-        cylinder(r=25.5, h=middle_h);
-        translate([0,0,-0.05])
-        cylinder(r=20,h=middle_h+0.1);
+        beveled_cylinder(r = 24.5, h = middle_h, b = 1.2);
+
+        translate([0, 0, -0.05])
+            cylinder(r = 20, h = middle_h + 0.1);
     }
 }
 module middle_tabs() {
     // prostřední pacičky
     // middle tabs
-    translate([-28,-4.25,5.5])
-    cube([3.5,8.5,tab_mid_h]);
-    
-    translate([16,-23.75,5.5])
-    rotate([0,0,115])
-    cube([3.5,8.5,tab_mid_h]);
-    
-    translate([11,26.25,5.5])
-    rotate([0,0,240])
-    cube([3.5,8.5,tab_mid_h]);
+    translate([-28, -4.25, 5.5])
+        cube([3.5, 8.5, tab_mid_h]);
+
+    translate([16, -23.75, 5.5])
+        rotate([0, 0, 115])
+            cube([3.5, 8.5, tab_mid_h]);
+
+    translate([11, 26.25, 5.5])
+        rotate([0, 0, 240])
+            cube([3.5, 8.5, tab_mid_h]);
 }
 module millstone_retaining_tabs() {
-    t_y = outer_dia/2 - bottom_thickness;
-    translate([-3.75,t_y,5.5])
-    rotate([90,0,0])
-    prism(7.5, 1.5, side_holder_length);
-    
-    translate([3.75,-t_y,5.5])
-    rotate([90,0,180])
-    prism(7.5, 1.5, side_holder_length);
+    t_y = outer_dia / 2 - bottom_thickness;
+    translate([-3.75, t_y, 5.5])
+        rotate([90, 0, 0])
+            prism(7.5, 1.5, side_holder_length);
+
+    translate([3.75, -t_y, 5.5])
+        rotate([90, 0, 180])
+            prism(7.5, 1.5, side_holder_length);
 }
 module bottom_parts() {
     difference() {
-        cylinder(r=outer_dia/2, h=bottom_h);
-        translate([0,0,-0.05])
-        cylinder(r=(outer_dia/2) - bottom_thickness, h=bottom_h + 0.1);
+                beveled_cylinder(r = outer_dia / 2, h = bottom_h, b = bottom_thickness+1); // refined to match mid cylinder
+        translate([0, 0, -0.05])
+            cylinder(r = (outer_dia / 2) - bottom_thickness, h = bottom_h + 0.1);
     }
 }
 module support_ring() {
     difference() {
-        cylinder(r=outer_dia/2, bottom_h);
-        translate([0,0,-0.5])
-        cylinder(r=(outer_dia/2)-0.4, bottom_h+1);
+        cylinder(r = outer_dia / 2, h = bottom_h);
+        translate([0, 0, -0.5])
+            cylinder(r = (outer_dia / 2) - 0.4, bottom_h + 1);
     }
 }
 
 module millstone_holders() {
-    translate([21.5,-3,0])
-    cube([3,6,12.05]);
-    
-    translate([-24.5,-3,0])
-    cube([3,6,12.05]);
+    translate([21.5, -3, 0])
+        cube([3, 6, 12.05]);
+
+    translate([-24.5, -3, 0])
+        cube([3, 6, 12.05]);
 }
 module side_millstone_holders() {
-    translate([21.5,-12,12])
-    rotate([0,90,0])
-    prism(bottom_h - middle_h,4,2);
-    
-    translate([21.5,12,0])
-    rotate([0,-90,180])
-    prism(bottom_h - middle_h,4,2);
-    
-    translate([-21.5,12,12])
-    rotate([0,90,180])
-    prism(bottom_h - middle_h,4,2);
-    
-    translate([-21.5,-12,0])
-    rotate([0,-90,0])
-    prism(bottom_h - middle_h,4,2);
+    translate([21.5, -12, 12])
+        rotate([0, 90, 0])
+            prism(bottom_h - middle_h, 4, 2);
+
+    translate([21.5, 12, 0])
+        rotate([0, -90, 180])
+            prism(bottom_h - middle_h, 4, 2);
+
+    translate([-21.5, 12, 12])
+        rotate([0, 90, 180])
+            prism(bottom_h - middle_h, 4, 2);
+
+    translate([-21.5, -12, 0])
+        rotate([0, -90, 0])
+            prism(bottom_h - middle_h, 4, 2);
 }
 
 module body() {
-    translate([0,0,bottom_h])
-    upper_tabs();
-    
-    translate([0,0,bottom_h])
-    color("green")
-    top_part();
+    translate([0, 0, bottom_h])
+        upper_tabs();
+
+    translate([0, 0, bottom_h])
+        color("green")
+            top_part();
     color("yellow")
 
-    middle_tabs();
+        middle_tabs();
 
-    translate([0,0,bottom_h - middle_h])
-    color("blue")
-    middle_part();
+    translate([0, 0, bottom_h - middle_h])
+        color("blue")
+            middle_part();
 
     color("Lime")
-    millstone_retaining_tabs();
+        millstone_retaining_tabs();
 
     color("orange")
-    bottom_parts();
+        bottom_parts();
 
     color("Purple")
-    millstone_holders();
+        millstone_holders();
 
     color("Maroon")
-    side_millstone_holders();
+        side_millstone_holders();
 }
- 
+
 module millstone_retainting_tab_cutouts() {
-    translate([-4.5,-26.5,-0.05])
-    union() {
-        cube([9,3,5.5]);
-        translate([0,0,5.45])
-        cube([0.75,3,5.5]);
-        translate([8.25,0,5.45])
-        cube([0.75,3,5.5]);
-    }
-    
-    translate([-4.5,23.5,-0.05])
-    union() {
-        cube([9,3,5.5]);
-        translate([0,0,5.45])
-        cube([0.75,3,5.5]);
-        translate([8.25,0,5.45])
-        cube([0.75,3,5.5]);
-    }
+    translate([-4.5, -26.5, -0.05])
+        union() {
+            cube([9, 3, 5.5]);
+            translate([0, 0, 5.45])
+                cube([0.75, 3, 5.5]);
+            translate([8.25, 0, 5.45])
+                cube([0.75, 3, 5.5]);
+        }
+
+    translate([-4.5, 23.5, -0.05])
+        union() {
+            cube([9, 3, 5.5]);
+            translate([0, 0, 5.45])
+                cube([0.75, 3, 5.5]);
+            translate([8.25, 0, 5.45])
+                cube([0.75, 3, 5.5]);
+        }
 }
 
 module millstone_cutouts_slits() {
-    translate([-4.5,-26.5,-0.05])
-    union() {
-        cube([0.75,3,bottom_h - middle_h]);
-        translate([8.25,0,0])
-        cube([0.75,3,bottom_h - middle_h]);
-    }
- 
+    translate([-4.5, -26.5, -0.05])
+        union() {
+            cube([0.75, 3, bottom_h - middle_h]);
+            translate([8.25, 0, 0])
+                cube([0.75, 3, bottom_h - middle_h]);
+        }
+
 }
 module top_cutouts() {
     module top_cutout_cube() {
-        translate([23.5,-1.5,7])
-        cube([4,3,7.05]);
+        translate([23.5, -1.5, 7])
+            cube([4, 3, 7.05]);
     }
     top_cutout_cube();
-    rotate([0,0,180])
-    top_cutout_cube();
+    rotate([0, 0, 180])
+        top_cutout_cube();
 }
 
 union() {
@@ -220,21 +230,21 @@ union() {
 
         body();
         top_cutouts();
-        if ( cutouts == "original") {
+        if (cutouts == "original") {
             millstone_retainting_tab_cutouts();
         } else if (cutouts == "slits") {
             millstone_cutouts_slits();
-            rotate([0,0,180])
-            millstone_cutouts_slits();
+            rotate([0, 0, 180])
+                millstone_cutouts_slits();
         }
     }
 
     //support_ring();
-    if ( debug_visualize_cutouts == 1) {
-        color("red",0.3)
-        millstone_cutouts_slits();
-        rotate([0,0,180])
-        color("blue",0.3)
-        millstone_cutouts_slits();
+    if (debug_visualize_cutouts == 1) {
+        color("red", 0.3)
+            millstone_cutouts_slits();
+        rotate([0, 0, 180])
+            color("blue", 0.3)
+                millstone_cutouts_slits();
     }
 }
