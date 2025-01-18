@@ -50,7 +50,7 @@ module upper_tabs() {
 
 module top_part() {
     difference() {
-        cylinder(r=22.5, h=4);
+        cylinder(r=22.5, h=7);
         translate([0,0,-0.05])
         cylinder(r=20, h=4.1);
     }
