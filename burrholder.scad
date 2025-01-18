@@ -113,7 +113,7 @@ module middle_tabss() {
 }
 module millstone_retaining_tabs() {
     t_y = bottom_internal_radius;
-    stone_thickness = 6.5;
+    stone_thickness = 6.0;
     stone_tab_h = bottom_h - stone_thickness;
     stone_tab_width = 7.5;
 
