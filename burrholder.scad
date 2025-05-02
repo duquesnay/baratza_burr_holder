@@ -20,7 +20,6 @@ middle_tab_height = 0.8; // [0.5:0.1:2]
 side_holder_length = 1.2; // [1:0.1:2]
 
 // Configuration options
-cutout_type = "slits"; // ["slits", "original"]
 debug_visualize_cutouts = 1; // [0, 1] - Set to 1 to see colored cutout shapes
 
 // https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Primitive_Solids
@@ -102,6 +101,7 @@ module top_part() {
             cylinder(r = top_inner_radius, h = top_total_height + height_clearance);
     }
 }
+
 module shoulder_part() {
     shoulder_outer_radius = 26.8;
     shoulder_bevel_radius = 25.8;
@@ -244,36 +244,6 @@ module body() {
         millstone_holders();
 }
 
-module millstone_retainting_tab_cutouts() {
-    tab_offset_x = -4.5;
-    tab_width = 9;
-    tab_height = 3;
-    tab_depth = 5.5;
-    small_tab_width = 0.75;
-    small_tab_offset_z = 5.45;
-    small_tab_spacing = 8.25;
-    overlap_clearance = 0.05;
-    
-    // Symmetric positions at 25-unit radius with 1.5-unit shift
-    tab_center_radius = 25;
-    tab_y_offset = 1.5;
-    for (y_position = [-tab_center_radius - tab_y_offset, tab_center_radius - tab_y_offset]) {
-        translate([tab_offset_x, y_position, -overlap_clearance])
-            union() {
-                // Main tab cutout
-                cube([tab_width, tab_height, tab_depth]);
-                
-                // Left small tab extension
-                translate([0, 0, small_tab_offset_z])
-                    cube([small_tab_width, tab_height, tab_depth]);
-                    
-                // Right small tab extension
-                translate([small_tab_spacing, 0, small_tab_offset_z])
-                    cube([small_tab_width, tab_height, tab_depth]);
-            }
-    }
-}
-
 module millstone_cutouts_slits() {
     slit_offset_x = -4.5;
     // Position slits with same dimensions as retaining tab cutouts for consistency
@@ -292,6 +262,7 @@ module millstone_cutouts_slits() {
                 cube([slit_width, slit_height, bottom_height + 2*overlap_clearance]);
         }
 }
+
 module top_cutouts() {
     cutout_x = 23.5;
     cutout_y = -1.5;
@@ -311,20 +282,15 @@ module top_cutouts() {
         top_cutout_cube();
 }
 
-// Apply cutouts based on selected type
+// Apply cutouts
 module apply_cutouts() {
-    // Top section cutouts for all variants
+    // Apply top cutouts
     top_cutouts();
     
-    // Apply selected millstone cutout type
-    if (cutout_type == "original") {
-        millstone_retainting_tab_cutouts();
-    } else if (cutout_type == "slits") {
-        // Apply slits on both sides (180° apart)
-        for (angle = [0, 180]) {
-            rotate([0, 0, angle])
-                millstone_cutouts_slits();
-        }
+    // Apply slit cutouts on both sides (180° apart)
+    for (angle = [0, 180]) {
+        rotate([0, 0, angle])
+            millstone_cutouts_slits();
     }
 }
 
@@ -349,10 +315,6 @@ union() {
             color("blue", 0.3)
                 millstone_cutouts_slits();
         
-        // Visualize retaining tab cutouts
-        color("green", 0.3)
-            millstone_retainting_tab_cutouts();
-            
         // Visualize top cutouts
         color("yellow", 0.3)
             top_cutouts();
