@@ -1,1 +1,14 @@
+# OpenSCAD temporary files
+*.csg
+*.echo
+*.deps
+
+# 3D printing specific files that might be large/generated
 /out/
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Claude config files
+**/.claude/settings.local.json
