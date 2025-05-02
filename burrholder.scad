@@ -21,7 +21,7 @@ side_holder_length = 1.2; // [1:0.1:2]
 
 // Configuration options
 cutout_type = "slits"; // ["slits", "original"]
-debug_visualize_cutouts = 0; // [0, 1] - Set to 1 to see colored cutout shapes
+debug_visualize_cutouts = 1; // [0, 1] - Set to 1 to see colored cutout shapes
 
 // https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Primitive_Solids
 module prism(l, w, h) {
