@@ -1,4 +1,4 @@
-$fa = 0.1;
+ $fa = 0.1;
 $fs = 0.4;
 
 //height (thickness) of 3 side tabs
@@ -8,12 +8,12 @@ outer_dia = 51.6; // [51:0.05:53]
 bottom_radius = outer_dia / 2;
 top_radius = 22.5;
 
-bottom_thickness = 2; // [1:0.1:2]
+bottom_thickness = 1.7; // [1:0.1:2]
 bottom_internal_radius = bottom_radius - bottom_thickness;
 
-top_h = 7;
+top_h = 6;
 shoulder_h = 2;
-bottom_h = 12;
+bottom_h = 11;
 
 side_holder_length = 1.2; // [1:0.1:2]
 
@@ -28,36 +28,43 @@ module prism(l, w, h) {
 }
 
 module create_tab(width = 4) {
-    // using shoulder_h to be able to play
+    // Core tab dimensions
     tab_height = shoulder_h + top_h;
     tip_angle = 45;
-    rubber_width_spacing_spacing = 1.6;
+    rubber_width_spacing = 1.6;
     tip_thickness = 1.6;
     connector_width = 2;
+    connector_height = 2 + shoulder_h;
     tip_angle_height = shoulder_h + 5;
     bevel_angle = 90 - tip_angle;
-    //this... could have been rough and simple, but I went for the math purity:
+    
+    // Calculated dimensions
     angled_part_height = tab_height - tip_angle_height;
     bevel_length = angled_part_height / cos(tip_angle) + tip_thickness * tan(tip_angle);
     bevel_height = bevel_length * cos(tip_angle);
+    
+    // Extra clearance for clean cuts
+    cut_clearance = 0.1;
+    cut_height_clearance = 1;
 
     difference() {
         union() {
             translate([-connector_width / 2, 0, 0])
-                cube([connector_width, rubber_width_spacing_spacing, 2 + shoulder_h]); // joint tab, 2mm high, 3mm long
-            // tab origin
-            translate([-width / 2, rubber_width_spacing_spacing, 0])
-                //lower part of tab
+                cube([connector_width, rubber_width_spacing, connector_height]); // joint tab
+                
+            // Lower part of tab
+            translate([-width / 2, rubber_width_spacing, 0])
                 cube([width, tip_thickness, tip_angle_height]);
-            // upper part of tab, beveled at given height
-            translate([-width / 2, rubber_width_spacing_spacing, tip_angle_height])
+                
+            // Upper part of tab, beveled at given height
+            translate([-width / 2, rubber_width_spacing, tip_angle_height])
                 rotate([-tip_angle, 0, 0])
                     cube([width, tip_thickness, bevel_length]);
-            //random long length, can't be twise as long since it's thiner on other dimensions
         }
-        //cut at given heigth
-        translate([-width / 2 - 0.1, rubber_width_spacing_spacing, tab_height]) cube([width + 0.2, bevel_length,
-            bevel_height]);
+        
+        // Cut at given height
+        translate([-width / 2 - cut_clearance, rubber_width_spacing, tab_height]) 
+            cube([width + 2*cut_clearance, bevel_length + cut_height_clearance, bevel_height]);
     }
 }
 
@@ -83,46 +90,80 @@ module beveled_cylinder(r, h, b) {
 
 
 module top_part() {
+    top_inner_radius = 20;
+    overlap_clearance = 0.05;
+    height_clearance = 0.1;
+    
     difference() {
-        cylinder(r = 22.5, h = top_h);
-        translate([0, 0, -0.05])
-            cylinder(r = 20, h = top_h + 0.1);
+        cylinder(r = top_radius, h = shoulder_h + top_h);
+        translate([0, 0, -overlap_clearance])
+            cylinder(r = top_inner_radius, h = shoulder_h + top_h + height_clearance);
     }
 }
+shoulder_extends = 1.5;
 module shoulder_part() {
-    // TODO user parameter for diameter and thickness
-    difference() {
-        beveled_cylinder(r = 25.8, h = shoulder_h, b = 1.2);
+    shoulder_outer_radius = 26.8;
+    shoulder_bevel_radius = 25.8;
+    bevel_thickness = 1;
+    overlap_clearance = 0.05;
+    height_clearance = 0.1;
+    radius_clearance = 0.1;
+    
+    // Main shoulder transition
+    color("blue") difference() {
+        union() {
+            cylinder(r1 = shoulder_outer_radius, r2 = top_radius, h = shoulder_h);
+        }
+        translate([0, 0, -overlap_clearance])
+            cylinder(r = top_radius, h = shoulder_h + height_clearance);
+    }
+    
+    // Reverse thicker reinforcement with bevel for mechanical strength
+    rotate([0, 180, 0])
+        color("white") difference() {
+            beveled_cylinder(r = shoulder_bevel_radius + bevel_thickness, 
+                             h = shoulder_extends, 
+                             b = bevel_thickness);
 
-        translate([0, 0, -0.05])
-            cylinder(r = 20, h = shoulder_h + 0.1);
+            translate([0, 0, -overlap_clearance])
+                cylinder(r = bottom_internal_radius + radius_clearance, 
+                         h = shoulder_extends + height_clearance);
+        }
+}
+
+module create_middle_tab() {
+    tab_position = bottom_radius - 1;
+    tab_radius_extension = 4;
+    tab_width = 8.5;
+    tab_length = 5;
+    tab_half_width = tab_width / 2;
+    
+    intersection() {
+        cylinder(h = tab_mid_h, r = tab_position + tab_radius_extension);
+        translate([tab_position, -tab_half_width, 0])
+                cube([tab_length, tab_width, tab_mid_h]);
     }
 }
-module middle_tabss() {
-    // middle tabs
-    translate([-28, -4.25, 5.5])
-        cube([3.5, 8.5, tab_mid_h]);
 
-    translate([16, -23.75, 5.5])
-        rotate([0, 0, 115])
-            cube([3.5, 8.5, tab_mid_h]);
-
-    translate([11, 26.25, 5.5])
-        rotate([0, 0, 240])
-            cube([3.5, 8.5, tab_mid_h]);
+module middle_tabs() {
+    for (i = [0:2]) {
+        rotate([0, 0, i * 120])
+            create_middle_tab();
+    }
 }
+
 module millstone_retaining_tabs() {
-    t_y = bottom_internal_radius;
-    stone_thickness = 6.0;
-    stone_tab_h = bottom_h - stone_thickness;
+    stone_thickness = 4.5;
+    stone_tab_h = bottom_h - shoulder_extends - stone_thickness;
     stone_tab_width = 7.5;
 
-    for (i = [0:1]) {
-        rotate([0, 0, i * 180])
-            translate([-stone_tab_width / 2, t_y, stone_tab_h])
-                rotate([90, 0, 0])
-                    prism(stone_tab_width, 1.5, side_holder_length);
-    }
+    translate([0, 0, stone_tab_h])
+        for (i = [0:1]) {
+            rotate([0, 0, i * 180])
+                translate([-stone_tab_width / 2, bottom_internal_radius, 0])
+                    rotate([90, 0, 0])
+                        prism(stone_tab_width, 1.5, side_holder_length);
+        }
 
 }
 module bottom_parts() {
@@ -134,40 +175,57 @@ module bottom_parts() {
 }
 
 module millstone_single_holder() {
-    translate([bottom_internal_radius - 3, 0, 0]) {
-        translate([0, -3, 0])
-            cube([3, 6, bottom_h]);
+    wall_thickness = 1.5;
+    holder_width = 3;
+    holder_height = 6;
+    holder_half_height = holder_height / 2;
+    
+    prism_offset_y = 12;
+    prism_height = 4;
+    prism_depth = 2;
+    prism_z_level = 6;
+    
+    translate([bottom_radius - wall_thickness - holder_width, 0, 0]) {
+        // Main holder pillar
+        translate([0, -holder_half_height, 0])
+            cube([holder_width, holder_height, bottom_h]);
 
-        translate([0, -12, 0])
+        // Left grip
+        translate([0, -prism_offset_y, prism_z_level])
             rotate([0, -90, 0])
-                prism(bottom_h, 4, -2);
+                prism(bottom_h - prism_z_level, prism_height, -prism_depth);
+                
+        // Right grip (mirrored)
         mirror([0, 1, 0])
-            translate([0, -12, 0])
+            translate([0, -prism_offset_y, prism_z_level])
                 rotate([0, -90, 0])
-                    prism(bottom_h, 4, -2);
+                    prism(bottom_h - prism_z_level, prism_height, -prism_depth);
     }
 }
 
 module millstone_holders() {
-    millstone_single_holder();
-    mirror([1, 0, 0])
+    for (i = [0:1])
+    rotate([0, 0, i * 180])
         millstone_single_holder();
+
 }
 
 module body() {
     translate([0, 0, bottom_h])
         upper_tabs();
 
-    translate([0, 0, bottom_h + shoulder_h])
+    translate([0, 0, bottom_h])
         color("green")
             top_part();
+
+    height_tabs_h = 5.5;
     color("yellow")
+        translate([0, 0, height_tabs_h])
+            middle_tabs();
 
-        middle_tabss();
-
-    translate([0, 0, bottom_h])
-        color("blue")
-            shoulder_part();
+        translate([0, 0, bottom_h])
+//            color("blue")
+                shoulder_part();
 
     color("Lime")
         millstone_retaining_tabs();
@@ -180,39 +238,63 @@ module body() {
 }
 
 module millstone_retainting_tab_cutouts() {
-    translate([-4.5, -26.5, -0.05])
-        union() {
-            cube([9, 3, 5.5]);
-            translate([0, 0, 5.45])
-                cube([0.75, 3, 5.5]);
-            translate([8.25, 0, 5.45])
-                cube([0.75, 3, 5.5]);
-        }
-
-    translate([-4.5, 23.5, -0.05])
-        union() {
-            cube([9, 3, 5.5]);
-            translate([0, 0, 5.45])
-                cube([0.75, 3, 5.5]);
-            translate([8.25, 0, 5.45])
-                cube([0.75, 3, 5.5]);
-        }
+    tab_offset_x = -4.5;
+    tab_width = 9;
+    tab_height = 3;
+    tab_depth = 5.5;
+    small_tab_width = 0.75;
+    small_tab_offset_z = 5.45;
+    small_tab_spacing = 8.25;
+    overlap_clearance = 0.05;
+    
+    tab_positions_y = [-26.5, 23.5];
+    
+    for (pos_y in tab_positions_y) {
+        translate([tab_offset_x, pos_y, -overlap_clearance])
+            union() {
+                // Main tab cutout
+                cube([tab_width, tab_height, tab_depth]);
+                
+                // Left small tab extension
+                translate([0, 0, small_tab_offset_z])
+                    cube([small_tab_width, tab_height, tab_depth]);
+                    
+                // Right small tab extension
+                translate([small_tab_spacing, 0, small_tab_offset_z])
+                    cube([small_tab_width, tab_height, tab_depth]);
+            }
+    }
 }
 
 module millstone_cutouts_slits() {
-    translate([-4.5, -26.5, -0.05])
+    slit_offset_x = -4.5;
+    slit_offset_y = -26.5;
+    slit_width = 0.75;
+    slit_height = 4;
+    slit_spacing = 8.25;
+    overlap_clearance = 0.05;
+    
+    translate([slit_offset_x, slit_offset_y, -overlap_clearance])
         union() {
-            cube([0.75, 4, bottom_h]);
-            translate([8.25, 0, 0])
-                cube([0.75, 4, bottom_h]);
+            cube([slit_width, slit_height, bottom_h + 2*overlap_clearance]);
+            translate([slit_spacing, 0, 0])
+                cube([slit_width, slit_height, bottom_h + 2*overlap_clearance]);
         }
-
 }
 module top_cutouts() {
+    cutout_x = 23.5;
+    cutout_y = -1.5;
+    cutout_z = 7;
+    cutout_width = 3;
+    cutout_length = 4;
+    cutout_height = 7.05;
+    
     module top_cutout_cube() {
-        translate([23.5, -1.5, 7])
-            cube([4, 3, 7.05]);
+        translate([cutout_x, cutout_y, cutout_z])
+            cube([cutout_length, cutout_width, cutout_height]);
     }
+    
+    // Create two cutouts at opposite sides
     top_cutout_cube();
     rotate([0, 0, 180])
         top_cutout_cube();
