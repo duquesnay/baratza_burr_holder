@@ -75,8 +75,8 @@ module upper_tabs() {
     upper_tab_width = 4.4;
     upper_tab_angles = [45, 225];
     
-    for (angle in upper_tab_angles) {
-        rotate([0, 0, angle])
+    for (i = [0:len(upper_tab_angles)-1]) {
+        rotate([0, 0, upper_tab_angles[i]])
             translate([0, top_radius, 0])
                 color("red") create_tab(width = upper_tab_width);
     }
@@ -150,8 +150,8 @@ module create_middle_tab() {
 module middle_tabs() {
     middle_tab_angles = [0, 120, 240];
     
-    for (angle in middle_tab_angles) {
-        rotate([0, 0, angle])
+    for (i = [0:len(middle_tab_angles)-1]) {
+        rotate([0, 0, middle_tab_angles[i]])
             create_middle_tab();
     }
 }
@@ -214,8 +214,8 @@ module millstone_single_holder() {
 module millstone_holders() {
     holder_angles = [0, 180];
     
-    for (angle in holder_angles) {
-        rotate([0, 0, angle])
+    for (i = [0:len(holder_angles)-1]) {
+        rotate([0, 0, holder_angles[i]])
             millstone_single_holder();
     }
 }
@@ -261,8 +261,8 @@ module millstone_retainting_tab_cutouts() {
     
     tab_positions_y = [-26.5, 23.5];
     
-    for (pos_y in tab_positions_y) {
-        translate([tab_offset_x, pos_y, -overlap_clearance])
+    for (i = [0:len(tab_positions_y)-1]) {
+        translate([tab_offset_x, tab_positions_y[i], -overlap_clearance])
             union() {
                 // Main tab cutout
                 cube([tab_width, tab_height, tab_depth]);
@@ -322,8 +322,8 @@ module apply_cutouts() {
         millstone_retainting_tab_cutouts();
     } else if (cutout_type == "slits") {
         // Apply slits on both sides (180° apart)
-        for (angle in [0, 180]) {
-            rotate([0, 0, angle])
+        for (i = [0:1]) {
+            rotate([0, 0, i * 180])
                 millstone_cutouts_slits();
         }
     }
