@@ -21,7 +21,7 @@ side_holder_length = 1.2; // [1:0.1:2]
 
 // Configuration options
 cutout_type = "slits"; // ["slits", "original"]
-debug_visualize_cutouts = 0; // [0, 1]
+debug_visualize_cutouts = 0; // [0, 1] - Set to 1 to see colored cutout shapes
 
 // https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Primitive_Solids
 module prism(l, w, h) {
@@ -280,7 +280,7 @@ module millstone_retainting_tab_cutouts() {
 
 module millstone_cutouts_slits() {
     slit_offset_x = -4.5;
-    slit_offset_y = -26.5;
+    slit_offset_y = -26.5; // Only used for one side, other is rotated 180°
     slit_width = 0.75;
     slit_height = 4;
     slit_spacing = 8.25;
@@ -288,9 +288,9 @@ module millstone_cutouts_slits() {
     
     translate([slit_offset_x, slit_offset_y, -overlap_clearance])
         union() {
-            cube([slit_width, slit_height, bottom_h + 2*overlap_clearance]);
+            cube([slit_width, slit_height, bottom_height + 2*overlap_clearance]);
             translate([slit_spacing, 0, 0])
-                cube([slit_width, slit_height, bottom_h + 2*overlap_clearance]);
+                cube([slit_width, slit_height, bottom_height + 2*overlap_clearance]);
         }
 }
 module top_cutouts() {
@@ -312,6 +312,23 @@ module top_cutouts() {
         top_cutout_cube();
 }
 
+// Apply cutouts based on selected type
+module apply_cutouts() {
+    // Top section cutouts for all variants
+    top_cutouts();
+    
+    // Apply selected millstone cutout type
+    if (cutout_type == "original") {
+        millstone_retainting_tab_cutouts();
+    } else if (cutout_type == "slits") {
+        // Apply slits on both sides (180° apart)
+        for (angle in [0, 180]) {
+            rotate([0, 0, angle])
+                millstone_cutouts_slits();
+        }
+    }
+}
+
 // Final assembly
 union() {
     difference() {
@@ -319,23 +336,24 @@ union() {
         body();
         
         // Apply cutouts
-        top_cutouts();
-        
-        if (cutout_type == "original") {
-            millstone_retainting_tab_cutouts();
-        } else if (cutout_type == "slits") {
-            millstone_cutouts_slits();
-            rotate([0, 0, 180])
-                millstone_cutouts_slits();
-        }
+        apply_cutouts();
     }
 
     // Debug visualization
     if (debug_visualize_cutouts == 1) {
+        // Visualize slit cutouts
         color("red", 0.3)
             millstone_cutouts_slits();
         rotate([0, 0, 180])
             color("blue", 0.3)
                 millstone_cutouts_slits();
+        
+        // Visualize retaining tab cutouts
+        color("green", 0.3)
+            millstone_retainting_tab_cutouts();
+            
+        // Visualize top cutouts
+        color("yellow", 0.3)
+            top_cutouts();
     }
 }
