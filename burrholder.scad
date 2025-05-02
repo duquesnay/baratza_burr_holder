@@ -254,7 +254,10 @@ module millstone_retainting_tab_cutouts() {
     small_tab_spacing = 8.25;
     overlap_clearance = 0.05;
     
-    for (y_position = [-26.5, 23.5]) {
+    // Symmetric positions at 25-unit radius with 1.5-unit shift
+    tab_center_radius = 25;
+    tab_y_offset = 1.5;
+    for (y_position = [-tab_center_radius - tab_y_offset, tab_center_radius - tab_y_offset]) {
         translate([tab_offset_x, y_position, -overlap_clearance])
             union() {
                 // Main tab cutout
@@ -273,7 +276,10 @@ module millstone_retainting_tab_cutouts() {
 
 module millstone_cutouts_slits() {
     slit_offset_x = -4.5;
-    slit_offset_y = -26.5; // Only used for one side, other is rotated 180°
+    // Position slits with same dimensions as retaining tab cutouts for consistency
+    slit_center_radius = 25;
+    slit_y_offset = 1.5;
+    slit_offset_y = -(slit_center_radius + slit_y_offset); // Only used for one side, other is rotated 180°
     slit_width = 0.75;
     slit_height = 4;
     slit_spacing = 8.25;
