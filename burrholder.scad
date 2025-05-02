@@ -73,10 +73,9 @@ module create_tab(width = 4) {
 
 module upper_tabs() {
     upper_tab_width = 4.4;
-    upper_tab_angles = [45, 225];
     
-    for (tab_index = [0:len(upper_tab_angles)-1]) {
-        rotate([0, 0, upper_tab_angles[tab_index]])
+    for (angle = [45, 225]) {
+        rotate([0, 0, angle])
             translate([0, top_radius, 0])
                 color("red") create_tab(width = upper_tab_width);
     }
@@ -148,10 +147,8 @@ module create_middle_tab() {
 }
 
 module middle_tabs() {
-    middle_tab_angles = [0, 120, 240];
-    
-    for (tab_index = [0:len(middle_tab_angles)-1]) {
-        rotate([0, 0, middle_tab_angles[tab_index]])
+    for (angle = [0, 120, 240]) {
+        rotate([0, 0, angle])
             create_middle_tab();
     }
 }
@@ -163,8 +160,8 @@ module millstone_retaining_tabs() {
     stone_tab_depth = 1.5;
 
     translate([0, 0, stone_tab_height])
-        for (side_index = [0:1]) { // 0 = first side, 1 = opposite side
-            rotate([0, 0, side_index * 180])
+        for (angle = [0, 180]) {
+            rotate([0, 0, angle])
                 translate([-stone_tab_width / 2, bottom_internal_radius, 0])
                     rotate([90, 0, 0])
                         prism(stone_tab_width, stone_tab_depth, side_holder_length);
@@ -212,10 +209,8 @@ module millstone_single_holder() {
 }
 
 module millstone_holders() {
-    holder_angles = [0, 180];
-    
-    for (holder_index = [0:len(holder_angles)-1]) {
-        rotate([0, 0, holder_angles[holder_index]])
+    for (angle = [0, 180]) {
+        rotate([0, 0, angle])
             millstone_single_holder();
     }
 }
@@ -259,10 +254,8 @@ module millstone_retainting_tab_cutouts() {
     small_tab_spacing = 8.25;
     overlap_clearance = 0.05;
     
-    tab_positions_y = [-26.5, 23.5];
-    
-    for (position_index = [0:len(tab_positions_y)-1]) {
-        translate([tab_offset_x, tab_positions_y[position_index], -overlap_clearance])
+    for (y_position = [-26.5, 23.5]) {
+        translate([tab_offset_x, y_position, -overlap_clearance])
             union() {
                 // Main tab cutout
                 cube([tab_width, tab_height, tab_depth]);
@@ -322,8 +315,8 @@ module apply_cutouts() {
         millstone_retainting_tab_cutouts();
     } else if (cutout_type == "slits") {
         // Apply slits on both sides (180° apart)
-        for (slit_side = [0:1]) { // 0 = first side, 1 = opposite side
-            rotate([0, 0, slit_side * 180])
+        for (angle = [0, 180]) {
+            rotate([0, 0, angle])
                 millstone_cutouts_slits();
         }
     }
@@ -341,15 +334,14 @@ union() {
 
     // Debug visualization
     if (debug_visualize_cutouts == 1) {
-        // Visualize slit cutouts with different colors for each side
-        slit_colors = ["red", "blue"];
-        slit_opacities = [0.3, 0.3];
-        
-        for (side = [0:1]) {
-            rotate([0, 0, side * 180])
-                color(slit_colors[side], slit_opacities[side])
-                    millstone_cutouts_slits();
-        }
+        // Show first slit cutout in red
+        color("red", 0.3)
+            millstone_cutouts_slits();
+            
+        // Show opposite slit cutout in blue
+        rotate([0, 0, 180])
+            color("blue", 0.3)
+                millstone_cutouts_slits();
         
         // Visualize retaining tab cutouts
         color("green", 0.3)
