@@ -160,13 +160,20 @@ stone_tab_width = 7.5;
 stone_tab_depth = 1.5;
 stone_tab_angles = [0, 180];
 
+// Create a single millstone tab
+module create_millstone_tab(width, depth, length) {
+    translate([-width / 2, 0, 0])
+        rotate([90, 0, 0])
+            prism(width, depth, length);
+}
+
+// Create all millstone retaining tabs around the cylinder
 module millstone_retaining_tabs() {
     translate([0, 0, stone_tab_height])
         for (angle = stone_tab_angles) {
             rotate([0, 0, angle])
-                translate([-stone_tab_width / 2, bottom_internal_radius, 0])
-                    rotate([90, 0, 0])
-                        prism(stone_tab_width, stone_tab_depth, side_holder_length);
+                translate([0, bottom_internal_radius, 0])
+                    create_millstone_tab(stone_tab_width, stone_tab_depth, side_holder_length);
         }
 }
 
