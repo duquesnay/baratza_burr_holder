@@ -305,6 +305,17 @@ module top_cutouts() {
         top_cutout_cube();
 }
 
+// Millstone Tab and Slit System - Documentation
+// This module doesn't render anything, it's documentation for the design
+module millstone_tab_system() {
+    // Each tab position has both a physical tab and corresponding flexibility slits
+    // When modifying the tab design, this helps ensure both parts stay in sync
+    
+    // For reference only - the actual rendering is done in:
+    // Physical tabs: millstone_retaining_tabs() in body()
+    // Flexibility slits: millstone_cutout_slits_all() in apply_cutouts()
+}
+
 // Create all slit cutouts at specified tab positions
 module millstone_cutout_slits_all() {
     for (angle = stone_tab_angles) {
