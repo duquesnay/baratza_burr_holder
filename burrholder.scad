@@ -305,16 +305,21 @@ module top_cutouts() {
         top_cutout_cube();
 }
 
+// Create all slit cutouts at specified tab positions
+module millstone_cutout_slits_all() {
+    for (angle = stone_tab_angles) {
+        rotate([0, 0, angle])
+            millstone_cutouts_slits();
+    }
+}
+
 // Apply cutouts
 module apply_cutouts() {
     // Apply top cutouts
     top_cutouts();
     
-    // Apply slit cutouts on both sides (180° apart)
-    for (angle = [0, 180]) {
-        rotate([0, 0, angle])
-            millstone_cutouts_slits();
-    }
+    // Apply millstone tab flexibility slits
+    millstone_cutout_slits_all();
 }
 
 // Final assembly
