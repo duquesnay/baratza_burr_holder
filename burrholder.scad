@@ -153,14 +153,16 @@ module middle_tabs() {
     }
 }
 
-module millstone_retaining_tabs() {
-    stone_thickness = 4.5;
-    stone_tab_height = bottom_height - shoulder_extension - stone_thickness;
-    stone_tab_width = 7.5;
-    stone_tab_depth = 1.5;
+// Parameters for millstone retaining tabs
+stone_thickness = 4.5;
+stone_tab_height = bottom_height - shoulder_extension - stone_thickness;
+stone_tab_width = 7.5;
+stone_tab_depth = 1.5;
+stone_tab_angles = [0, 180];
 
+module millstone_retaining_tabs() {
     translate([0, 0, stone_tab_height])
-        for (angle = [0, 180]) {
+        for (angle = stone_tab_angles) {
             rotate([0, 0, angle])
                 translate([-stone_tab_width / 2, bottom_internal_radius, 0])
                     rotate([90, 0, 0])
