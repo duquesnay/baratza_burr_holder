@@ -16,11 +16,10 @@ bottom_height = 11;
 shoulder_extension = 1.5;
 
 // Tabs - Dimensions
-middle_tab_height = 0.8; // [0.5:0.1:2]
 side_holder_length = 1.2; // [1:0.1:2]
 
 // Configuration options
-debug_visualize_cutouts = 1; // [0, 1] - Set to 1 to see colored cutout shapes
+debug_visualize_cutouts = 0; // [0, 1] - Set to 1 to see colored cutout shapes
 
 // https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Primitive_Solids
 module prism(l, w, h) {
@@ -135,27 +134,29 @@ module shoulder_part() {
 // Middle tab with helix angle for threading onto the grinder
 module create_middle_tab() {
     // Tab dimensions
-    tab_position = bottom_radius - 1;
-    tab_radius_extension = 4;
-    tab_width = 14;
-    tab_length = 5;
-    tab_half_width = tab_width / 2;
+    tab_position = bottom_radius - 4.5;
+    tab_radius_extension = 7;
+    tab_width = 30;
+    middle_tab_height = 0.8; // [0.5:0.1:2]
+    tab_half_width = 4;
 
     // Thread angle for 2mm rise per 120 degrees
     thread_angle = -2.2; // Calculated helix angle for the given pitch
 
     // Apply a rotation to the original tab to create the helix effect
+
     intersection() {
         // Limit to cylinder surface
-        cylinder(h = shoulder_height, r = tab_position + tab_radius_extension);
-
+        difference() {
+            cylinder(h = shoulder_height, r = tab_position + tab_radius_extension);
+            cylinder(h = shoulder_height, r = bottom_internal_radius);
+        }
         // Rotate the tab with X-axis rotation for the thread helix effect
         // The rotation center is at the inner edge where the tab meets the cylinder
-        translate([tab_position, 0, 0])
-            translate([0, tab_half_width, 0])
-                rotate([thread_angle, 0, 0])
-                    translate([0, -tab_width, 0])
-                        cube([tab_length, tab_width, middle_tab_height]);
+        translate([0, tab_half_width, 0])
+            rotate([thread_angle, 0, 0])
+                translate([0, -tab_width, 0])
+                    cube([tab_position + tab_position + tab_radius_extension, tab_width, middle_tab_height]);
     }
 }
 
