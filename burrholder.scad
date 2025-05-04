@@ -246,22 +246,25 @@ module body() {
         millstone_holders();
 }
 
+// Parameters for millstone flexibility slits
+slit_offset_x = -4.5;
+slit_center_radius = 25;
+slit_y_offset = 1.5;
+slit_width = 0.75;
+slit_height = 4;
+slit_spacing = 8.25;
+slit_clearance = 0.05;
+
 module millstone_cutouts_slits() {
-    slit_offset_x = -4.5;
-    // Position slits with same dimensions as retaining tab cutouts for consistency
-    slit_center_radius = 25;
-    slit_y_offset = 1.5;
-    slit_offset_y = -(slit_center_radius + slit_y_offset); // Only used for one side, other is rotated 180°
-    slit_width = 0.75;
-    slit_height = 4;
-    slit_spacing = 8.25;
-    overlap_clearance = 0.05;
+    // Calculate final position
+    slit_offset_y = -(slit_center_radius + slit_y_offset);
+    total_depth = bottom_height + 2*slit_clearance;
     
-    translate([slit_offset_x, slit_offset_y, -overlap_clearance])
+    translate([slit_offset_x, slit_offset_y, -slit_clearance])
         union() {
-            cube([slit_width, slit_height, bottom_height + 2*overlap_clearance]);
+            cube([slit_width, slit_height, total_depth]);
             translate([slit_spacing, 0, 0])
-                cube([slit_width, slit_height, bottom_height + 2*overlap_clearance]);
+                cube([slit_width, slit_height, total_depth]);
         }
 }
 
