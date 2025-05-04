@@ -334,14 +334,12 @@ union() {
 
     // Debug visualization
     if (debug_visualize_cutouts == 1) {
-        // Show first slit cutout in red
-        color("red", 0.3)
-            millstone_cutouts_slits();
-            
-        // Show opposite slit cutout in blue
-        rotate([0, 0, 180])
-            color("blue", 0.3)
-                millstone_cutouts_slits();
+        // Show millstone tab slits with alternating colors for clarity
+        for (i = [0:len(stone_tab_angles)-1]) {
+            color(i % 2 == 0 ? "red" : "blue", 0.3)
+                rotate([0, 0, stone_tab_angles[i]])
+                    millstone_cutouts_slits();
+        }
         
         // Visualize top cutouts
         color("yellow", 0.3)
