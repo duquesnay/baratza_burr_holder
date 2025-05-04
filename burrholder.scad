@@ -39,12 +39,12 @@ module create_tab(width = 4) {
     tab_connector_height = 2 + shoulder_height;
     tab_angle_start_height = shoulder_height + 5;
     tab_bevel_angle = 90 - tab_tip_angle;
-    
+
     // Calculated dimensions
     tab_angled_part_height = tab_total_height - tab_angle_start_height;
     tab_bevel_length = tab_angled_part_height / cos(tab_tip_angle) + tab_thickness * tan(tab_tip_angle);
     tab_bevel_height = tab_bevel_length * cos(tab_tip_angle);
-    
+
     // Extra clearance for clean cuts
     tab_cut_clearance = 0.1;
     tab_cut_height_clearance = 1;
@@ -53,26 +53,26 @@ module create_tab(width = 4) {
         union() {
             translate([-tab_connector_width / 2, 0, 0])
                 cube([tab_connector_width, tab_base_spacing, tab_connector_height]); // joint tab
-                
+
             // Lower part of tab
             translate([-width / 2, tab_base_spacing, 0])
                 cube([width, tab_thickness, tab_angle_start_height]);
-                
+
             // Upper part of tab, beveled at given height
             translate([-width / 2, tab_base_spacing, tab_angle_start_height])
                 rotate([-tab_tip_angle, 0, 0])
                     cube([width, tab_thickness, tab_bevel_length]);
         }
-        
+
         // Cut at given height
-        translate([-width / 2 - tab_cut_clearance, tab_base_spacing, tab_total_height]) 
-            cube([width + 2*tab_cut_clearance, tab_bevel_length + tab_cut_height_clearance, tab_bevel_height]);
+        translate([-width / 2 - tab_cut_clearance, tab_base_spacing, tab_total_height])
+            cube([width + 2 * tab_cut_clearance, tab_bevel_length + tab_cut_height_clearance, tab_bevel_height]);
     }
 }
 
 module upper_tabs() {
     upper_tab_width = 4.4;
-    
+
     for (angle = [45, 225]) {
         rotate([0, 0, angle])
             translate([0, top_radius, 0])
@@ -94,7 +94,7 @@ module top_part() {
     overlap_clearance = 0.05;
     height_clearance = 0.1;
     top_total_height = shoulder_height + top_height;
-    
+
     difference() {
         cylinder(r = top_radius, h = top_total_height);
         translate([0, 0, -overlap_clearance])
@@ -109,7 +109,7 @@ module shoulder_part() {
     overlap_clearance = 0.05;
     height_clearance = 0.1;
     radius_clearance = 0.1;
-    
+
     // Main shoulder transition
     color("blue") difference() {
         union() {
@@ -118,31 +118,44 @@ module shoulder_part() {
         translate([0, 0, -overlap_clearance])
             cylinder(r = top_radius, h = shoulder_height + height_clearance);
     }
-    
+
     // Reverse thicker reinforcement with bevel for mechanical strength
     rotate([0, 180, 0])
         color("white") difference() {
-            beveled_cylinder(r = shoulder_bevel_radius + bevel_thickness, 
-                             h = shoulder_extension, 
-                             b = bevel_thickness);
+            beveled_cylinder(r = shoulder_bevel_radius + bevel_thickness,
+            h = shoulder_extension,
+            b = bevel_thickness);
 
             translate([0, 0, -overlap_clearance])
-                cylinder(r = bottom_internal_radius + radius_clearance, 
-                         h = shoulder_extension + height_clearance);
+                cylinder(r = bottom_internal_radius + radius_clearance,
+                h = shoulder_extension + height_clearance);
         }
 }
 
+// Middle tab with helix angle for threading onto the grinder
 module create_middle_tab() {
+    // Tab dimensions
     tab_position = bottom_radius - 1;
     tab_radius_extension = 4;
-    tab_width = 8.5;
+    tab_width = 14;
     tab_length = 5;
     tab_half_width = tab_width / 2;
-    
+
+    // Thread angle for 2mm rise per 120 degrees
+    thread_angle = -2.2; // Calculated helix angle for the given pitch
+
+    // Apply a rotation to the original tab to create the helix effect
     intersection() {
-        cylinder(h = middle_tab_height, r = tab_position + tab_radius_extension);
-        translate([tab_position, -tab_half_width, 0])
-                cube([tab_length, tab_width, middle_tab_height]);
+        // Limit to cylinder surface
+        cylinder(h = shoulder_height, r = tab_position + tab_radius_extension);
+
+        // Rotate the tab with X-axis rotation for the thread helix effect
+        // The rotation center is at the inner edge where the tab meets the cylinder
+        translate([tab_position, 0, 0])
+            translate([0, tab_half_width, 0])
+                rotate([thread_angle, 0, 0])
+                    translate([0, -tab_width, 0])
+                        cube([tab_length, tab_width, middle_tab_height]);
     }
 }
 
@@ -180,7 +193,7 @@ module millstone_retaining_tabs() {
 module bottom_parts() {
     overlap_clearance = 0.05;
     height_clearance = 0.1;
-    
+
     difference() {
         cylinder(r = bottom_radius, h = bottom_height);
         translate([0, 0, -overlap_clearance])
@@ -193,12 +206,12 @@ module millstone_single_holder() {
     holder_width = 3;
     holder_height = 6;
     holder_half_height = holder_height / 2;
-    
+
     holder_prism_offset_y = 12;
     holder_prism_height = 4;
     holder_prism_depth = 2;
     holder_prism_z_level = 6;
-    
+
     translate([bottom_radius - holder_wall_thickness - holder_width, 0, 0]) {
         // Main holder pillar
         translate([0, -holder_half_height, 0])
@@ -208,7 +221,7 @@ module millstone_single_holder() {
         translate([0, -holder_prism_offset_y, holder_prism_z_level])
             rotate([0, -90, 0])
                 prism(bottom_height - holder_prism_z_level, holder_prism_height, -holder_prism_depth);
-                
+
         // Right grip (mirrored)
         mirror([0, 1, 0])
             translate([0, -holder_prism_offset_y, holder_prism_z_level])
@@ -226,14 +239,14 @@ module millstone_holders() {
 
 module body() {
     middle_tabs_position = 5.5;
-    
+
     // Top section components
     translate([0, 0, bottom_height]) {
         upper_tabs();
-        
+
         color("green")
             top_part();
-            
+
         shoulder_part();
     }
 
@@ -280,8 +293,8 @@ module create_slit_pair(width, height, depth, spacing) {
 module millstone_cutouts_slits() {
     // Calculate final position
     slit_offset_y = -(slit_center_radius + slit_y_offset);
-    total_depth = bottom_height + 2*slit_clearance;
-    
+    total_depth = bottom_height + 2 * slit_clearance;
+
     translate([slit_offset_x, slit_offset_y, -slit_clearance])
         create_slit_pair(slit_width, slit_height, total_depth, slit_spacing);
 }
@@ -293,12 +306,12 @@ module top_cutouts() {
     cutout_width = 3;
     cutout_length = 4;
     cutout_height = 7.05;
-    
+
     module top_cutout_cube() {
         translate([cutout_x, cutout_y, cutout_z])
             cube([cutout_length, cutout_width, cutout_height]);
     }
-    
+
     // Create two cutouts at opposite sides
     top_cutout_cube();
     rotate([0, 0, 180])
@@ -310,7 +323,7 @@ module top_cutouts() {
 module millstone_tab_system() {
     // Each tab position has both a physical tab and corresponding flexibility slits
     // When modifying the tab design, this helps ensure both parts stay in sync
-    
+
     // For reference only - the actual rendering is done in:
     // Physical tabs: millstone_retaining_tabs() in body()
     // Flexibility slits: millstone_cutout_slits_all() in apply_cutouts()
@@ -328,7 +341,7 @@ module millstone_cutout_slits_all() {
 module apply_cutouts() {
     // Apply top cutouts
     top_cutouts();
-    
+
     // Apply millstone tab flexibility slits
     millstone_cutout_slits_all();
 }
@@ -338,7 +351,7 @@ union() {
     difference() {
         // Main body
         body();
-        
+
         // Apply cutouts
         apply_cutouts();
     }
@@ -346,12 +359,12 @@ union() {
     // Debug visualization
     if (debug_visualize_cutouts == 1) {
         // Show millstone tab slits with alternating colors for clarity
-        for (i = [0:len(stone_tab_angles)-1]) {
+        for (i = [0:len(stone_tab_angles) - 1]) {
             color(i % 2 == 0 ? "red" : "blue", 0.3)
                 rotate([0, 0, stone_tab_angles[i]])
                     millstone_cutouts_slits();
         }
-        
+
         // Visualize top cutouts
         color("yellow", 0.3)
             top_cutouts();
