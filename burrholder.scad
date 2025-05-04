@@ -262,17 +262,28 @@ slit_height = 4;
 slit_spacing = 8.25;
 slit_clearance = 0.05;
 
+// Create a single flexibility slit
+module create_slit(width, height, depth) {
+    cube([width, height, depth]);
+}
+
+// Create a pair of slits with specified spacing
+module create_slit_pair(width, height, depth, spacing) {
+    union() {
+        create_slit(width, height, depth);
+        translate([spacing, 0, 0])
+            create_slit(width, height, depth);
+    }
+}
+
+// Create slits for a single tab position
 module millstone_cutouts_slits() {
     // Calculate final position
     slit_offset_y = -(slit_center_radius + slit_y_offset);
     total_depth = bottom_height + 2*slit_clearance;
     
     translate([slit_offset_x, slit_offset_y, -slit_clearance])
-        union() {
-            cube([slit_width, slit_height, total_depth]);
-            translate([slit_spacing, 0, 0])
-                cube([slit_width, slit_height, total_depth]);
-        }
+        create_slit_pair(slit_width, slit_height, total_depth, slit_spacing);
 }
 
 module top_cutouts() {
