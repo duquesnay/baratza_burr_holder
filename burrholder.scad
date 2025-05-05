@@ -75,6 +75,28 @@ radius = top_radius
     }
 }
 
+// Parameters for upper ring
+upper_ring_thickness = 1.6;       // Thickness of the vertical ring
+upper_ring_height = 8;            // Height of the vertical ring
+upper_ring_base_spacing = 1.6;    // Spacing between body and ring
+
+// Create a continuous vertical ring around the top cylinder
+module upper_ring(
+thickness = upper_ring_thickness,
+height = upper_ring_height,
+base_spacing = upper_ring_base_spacing,
+radius = top_radius
+) {
+    color("red") difference() {
+        // Outer cylinder for the ring
+        cylinder(r = radius + base_spacing + thickness, h = height);
+        
+        // Inner cutout to create the ring
+        translate([0, 0, -0.1])
+            cylinder(r = radius + base_spacing, h = height + 0.2);
+    }
+}
+
 module beveled_cylinder(r, h, b) {
     union() {
         cylinder(h = h - b, r = r);
