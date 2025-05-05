@@ -44,10 +44,10 @@ Recent updates:
 
  ## Todos
 - [X] remove pointless cutouts on bottom top shoulder
-- [X] replace burrholder tabs by horizontal, closed flexible spring system
+- [ ] replace burrholder tabs by horizontal, closed flexible spring system
 - [X] remove useless shoulder between top and bottom
 - [X] replace top tabs as a full ring for resistance and printing
-- [X] thicken the stabiliser ridge to limit movement of the burr
+- [ ] thicken the stabiliser ridge to limit movement of the burr
 
 ## License
 
