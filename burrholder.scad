@@ -87,6 +87,7 @@ height = upper_ring_height,
 base_spacing = upper_ring_base_spacing,
 connector_positions = upper_tab_positions,
 connector_width = upper_tab_connector_width,
+connector_height = upper_tab_connector_height_extension + shoulder_height,
 radius = top_radius
 ) {
     color("red") union() {
@@ -101,10 +102,11 @@ radius = top_radius
         }
         
         // Add connectors at exactly the same positions as the original tabs
+        // with the original connector height
         for (angle = connector_positions) {
             rotate([0, 0, angle])
                 translate([-connector_width / 2, radius, 0])
-                    cube([connector_width, base_spacing, height]);
+                    cube([connector_width, base_spacing, connector_height]);
         }
     }
 }
