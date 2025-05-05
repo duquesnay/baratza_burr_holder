@@ -30,6 +30,14 @@ To print with different settings some parameters should be adjusted:
 - bottom_thickness - should be multiple of line width - this also affects fit of the burr so may take some trial and error
 - tab_mid_h - thickness of the 3 side tabs - should be multipole of layer height while also less than 1mm to fit into the grinder
 
+## Design Notes
+
+Recent updates:
+- BOSL2 library integration for advanced features
+- Replaced middle tab with thread_helix - smoother & stronger threads
+- Triple-start square thread design (0° angle) - quick & secure attachment
+- Thread params: 0.3 turns, 2mm pitch, 1.5mm depth, lead-in for easy engagement
+
 ## License
 
 Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0) <https://creativecommons.org/licenses/by-nc-sa/4.0/>
