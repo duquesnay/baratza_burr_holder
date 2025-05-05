@@ -77,7 +77,7 @@ radius = top_radius
 
 // Parameters for upper ring
 upper_ring_height = 8;            // Height of the vertical ring
-upper_ring_base_spacing = 1.6;    // Spacing between body and ring
+upper_ring_base_spacing = 2;    // Spacing between body and ring
 
 // Create a continuous vertical ring around the top cylinder with connectors
 module upper_ring(
@@ -86,35 +86,64 @@ base_spacing = upper_ring_base_spacing,
 connector_positions = upper_tab_positions,
 connector_width = upper_tab_connector_width,
 connector_height = upper_tab_connector_height_extension + shoulder_height,
-inner_radius = top_radius,
-outer_radius = 25.8  // Same as shoulder_transition outer_radius default
+outer_radius = 27.8  // Same as shoulder_transition outer_radius default
 ) {
-    color("red") union() {
-        // Main ring - same outer radius as the shoulder
-        difference() {
-            // Outer cylinder for the ring
-            cylinder(r = outer_radius, h = height);
+    inner_radius = top_radius;
+    outer_inner_radius = top_radius + base_spacing;
 
-            // Inner cutout to create the ring
-            translate([0, 0, -0.1])
-                cylinder(r = inner_radius + base_spacing, h = height + 0.2);
-        }
+    ring_thickness = 2;
+    color("red")
+        union() {
+            difference() {
+                // Main ring - same outer radius as the shoulder
+                union() {
+                    // Outer cylinder for the ring
 
-        // Add connectors at exactly the same positions as the original tabs
-        // with the original connector height
-        for (angle = connector_positions) {
-            rotate([0, 0, angle])
-                translate([-connector_width / 2, inner_radius, 0])
-                    cube([connector_width, base_spacing, connector_height]);
+                    //                        cylinder(r = outer_radius, h = height - ring_thickness);
+                    // Inner cutout to create the ring
+                    //                translate([0, 0, -ring_thickness])
+                    beveled_cylinder(r = outer_radius, b = -ring_thickness, h = height);
+                }
+                //                translate([0, 0, -ring_thickness])
+                translate([0, 0, -0.1])
+                    union() {
+                        translate([0, 0, ring_thickness])
+                            cylinder(r = outer_inner_radius, h = height - ring_thickness + 0.2);
+                        // Inner cutout to create the ring
+                        cylinder(r = outer_inner_radius, h = ring_thickness + 0.2);
+                    }
+            }
+
+
+            // Add connectors at exactly the same positions as the original tabs
+            // with the original connector height
+            for (angle = connector_positions) {
+                rotate([0, 0, angle])
+                    translate([-connector_width / 2, inner_radius, 0])
+                        cube([connector_width, base_spacing, connector_height]);
+            }
         }
-    }
 }
 
+// Create a beveled cylinder for the ring
+// This is a simplified version of the original beveled cylinder
+// r is the outer radius, h is the height, and b is the bevel thickness
 module beveled_cylinder(r, h, b) {
-    union() {
-        cylinder(h = h - b, r = r);
-        translate([0, 0, h - b])
-            cylinder(h = b, r1 = r, r2 = r - b);
+    if (b < 0) {
+        // Create a cylinder with a beveled bottom
+        b = -b;
+        union() {
+            translate([0, 0, b])
+                cylinder(h = h - b, r = r);
+            cylinder(h = b, r1 = r - b, r2 = r);
+        }
+    } else {
+        // Create a cylinder with bevel top
+        union() {
+            cylinder(h = h - b, r = r);
+            translate([0, 0, h - b])
+                cylinder(h = b, r1 = r, r2 = r - b);
+        }
     }
 }
 
@@ -158,7 +187,7 @@ radius_clearance = 0.1
     // Main shoulder transition (conical ring)
     color("blue") difference() {
         // Outer tapered cylinder
-        cylinder(r1 = outer_radius, r2 = top_radius_val, h = height);
+        cylinder(r2 = outer_radius, r1 = top_radius_val, h = height);
 
         // Inner cutout to create ring
         translate([0, 0, -overlap_clearance])
@@ -191,44 +220,21 @@ module create_middle_tab() {
     tab_width = 40;
     middle_tab_height = 0.8; // [0.5:0.1:2]
     tab_half_width = tab_width / 2;
-
-    // Thread parameters that work with CGAL renderer
+    
+    // Use standard thread parameters that are known to work well
     pitch = 2;
-    thread_depth = 1.5;      // Reduced from 2mm to prevent CGAL errors
-
-    // We need a custom profile with different angles on each side
-    // - Lower angle (15°) on the leading edge for precision
-    // - Higher angle (45°) on the trailing edge for printability
-    thread_width = 0.7;
-
-    // Calculate points for an asymmetric thread profile
-    // This provides better precision on the leading edge
-    vert_rise = thread_depth;
-
-    // Leading edge - 15° for precision (low slope)
-    leading_edge_run = thread_width * 0.7;
-
-    // Trailing edge - 45° for printability (steeper slope)
-    trailing_edge_run = thread_width * 0.3;
-
-    profile_pts = [
-            [-pitch / 2, 0], // Start at bottom left
-            [0, 0], // Bottom right corner
-            [0, vert_rise], // Up to thread depth
-            [leading_edge_run, vert_rise], // Flat top
-            [thread_width, 0]               // Angled down to bottom (creates the asymmetric bevel)
-        ];
-
-    // Create thread helix with the custom asymmetric profile
-    // This should render correctly with CGAL while providing precision
+    thread_depth = 1.5;      // Standard depth for reliable threading
+    
+    // Use the default thread profile which renders reliably
     thread_helix(
-    turns = 0.25, // Reduced slightly from 0.3
-    d = (bottom_radius) * 2, // Outer diameter
-    pitch = pitch, // Distance between complete turns
-    starts = 3, // Triple-start thread
-    profile = profile_pts, // Use custom asymmetric profile
-    left_handed = true,
-    lead_in1 = 0.8               // Reduced lead-in to prevent geometry errors
+        turns = 0.3,                 // Standard turns value
+        d = (bottom_radius) * 2,     // Outer diameter
+        pitch = pitch,               // Distance between complete turns
+        starts = 3,                  // Triple-start thread
+        thread_depth = thread_depth, // Use depth parameter directly
+        thread_angle = 0,            // Square thread profile for precision fit
+        left_handed = true,
+        lead_in1 = 2                 // Standard lead-in
     );
 }
 
@@ -359,74 +365,74 @@ height_clearance = 0.1
     holder_segment_width = 60;     // Angular width of holder segments at 0° and 180°
     retainer_segment_width = 30;   // Angular width of retainer segments at 90° and 270°
     closed_gap_width = 0.75;       // Width of horizontal slots
-    
+
     // Create the holder segments at 0° and 180°
     color("Purple") {
         // Holder at 0°
         rotate([0, 0, 0])
             millstone_holder_segment(angle_width = holder_segment_width);
-            
+
         // Holder at 180°
         rotate([0, 0, 180])
             millstone_holder_segment(angle_width = holder_segment_width);
     }
-    
+
     // Create the retainer tab segments at 90° and 270° with horizontal slots
     color("Lime") {
         // Retainer at 90°
         rotate([0, 0, 90])
             millstone_retainer_tab_segment(
-                angle_width = retainer_segment_width,
-                closed_gap_width = closed_gap_width
+            angle_width = retainer_segment_width,
+            closed_gap_width = closed_gap_width
             );
-            
+
         // Retainer at 270°
         rotate([0, 0, 270])
             millstone_retainer_tab_segment(
-                angle_width = retainer_segment_width,
-                closed_gap_width = closed_gap_width
+            angle_width = retainer_segment_width,
+            closed_gap_width = closed_gap_width
             );
     }
-    
+
     // Create the plain wall segments - connect the holders and retainers
     color("orange") {
         // Four wall segments to connect the main components
         // Each segment connects a holder to a retainer tab
-        
+
         // 1. Connect 0° holder to 90° tab
         bottom_cylinder_segment(
-            start_angle = holder_segment_width/2,
-            end_angle = 90 - retainer_segment_width/2,
-            outer_radius = outer_radius,
-            inner_radius = inner_radius,
-            height = height
+        start_angle = holder_segment_width / 2,
+        end_angle = 90 - retainer_segment_width / 2,
+        outer_radius = outer_radius,
+        inner_radius = inner_radius,
+        height = height
         );
-        
+
         // 2. Connect 90° tab to 180° holder
         bottom_cylinder_segment(
-            start_angle = 90 + retainer_segment_width/2,
-            end_angle = 180 - holder_segment_width/2,
-            outer_radius = outer_radius,
-            inner_radius = inner_radius,
-            height = height
+        start_angle = 90 + retainer_segment_width / 2,
+        end_angle = 180 - holder_segment_width / 2,
+        outer_radius = outer_radius,
+        inner_radius = inner_radius,
+        height = height
         );
-        
+
         // 3. Connect 180° holder to 270° tab
         bottom_cylinder_segment(
-            start_angle = 180 + holder_segment_width/2,
-            end_angle = 270 - retainer_segment_width/2,
-            outer_radius = outer_radius,
-            inner_radius = inner_radius,
-            height = height
+        start_angle = 180 + holder_segment_width / 2,
+        end_angle = 270 - retainer_segment_width / 2,
+        outer_radius = outer_radius,
+        inner_radius = inner_radius,
+        height = height
         );
-        
+
         // 4. Connect 270° tab to 0° holder (wraps around 360°)
         bottom_cylinder_segment(
-            start_angle = 270 + retainer_segment_width/2,
-            end_angle = 360 - holder_segment_width/2,
-            outer_radius = outer_radius,
-            inner_radius = inner_radius,
-            height = height
+        start_angle = 270 + retainer_segment_width / 2,
+        end_angle = 360 - holder_segment_width / 2,
+        outer_radius = outer_radius,
+        inner_radius = inner_radius,
+        height = height
         );
     }
 }
@@ -446,27 +452,27 @@ prism_height = 4,
 prism_depth = 2,
 prism_z_level = 6
 ) {
-half_height = height / 2;
+    half_height = height / 2;
 
-// Calculate positioning based on parameters
-x_position = outer_radius - wall_thickness - width;
+    // Calculate positioning based on parameters
+    x_position = outer_radius - wall_thickness - width;
 
-translate([x_position, 0, 0]) {
-// Main holder pillar
-translate([0, - half_height, 0])
-cube([width, height, cylinder_height]);
+    translate([x_position, 0, 0]) {
+        // Main holder pillar
+        translate([0, -half_height, 0])
+            cube([width, height, cylinder_height]);
 
-// Left grip
-translate([0, - prism_offset_y, prism_z_level])
-rotate([0, - 90, 0])
-prism(cylinder_height - prism_z_level, prism_height, - prism_depth);
+        // Left grip
+        translate([0, -prism_offset_y, prism_z_level])
+            rotate([0, -90, 0])
+                prism(cylinder_height - prism_z_level, prism_height, -prism_depth);
 
-// Right grip (mirrored)
-mirror([0, 1, 0])
-translate([0, - prism_offset_y, prism_z_level])
-rotate([0, - 90, 0])
-prism(cylinder_height - prism_z_level, prism_height, - prism_depth);
-}
+        // Right grip (mirrored)
+        mirror([0, 1, 0])
+            translate([0, -prism_offset_y, prism_z_level])
+                rotate([0, -90, 0])
+                    prism(cylinder_height - prism_z_level, prism_height, -prism_depth);
+    }
 }
 
 // Position parameters for main components
@@ -477,26 +483,26 @@ module body(
 tabs_position = middle_tabs_position,
 bottom_height_val = bottom_height
 ) {
-// Top section components
-translate([0, 0, bottom_height_val]) {
-// Top cylinder
-color("green")
-top_part();
+    // Top section components
+    translate([0, 0, bottom_height_val]) {
+        // Top cylinder
+        color("green")
+            top_part();
 
-// Shoulder transition
-shoulder_part();
+        // Shoulder transition
+        shoulder_part();
 
-// Upper ring around the top cylinder
-upper_ring();
-}
+        // Upper ring around the top cylinder
+        upper_ring();
+    }
 
-// Middle section - threaded tabs
-color("yellow")
-translate([0, 0, tabs_position])
-middle_tabs();
+    // Middle section - threaded tabs
+    color("yellow")
+        translate([0, 0, tabs_position])
+            middle_tabs();
 
-// Bottom section components
-bottom_parts();
+    // Bottom section components
+    bottom_parts();
 }
 
 
@@ -507,7 +513,7 @@ height = 4,
 depth = bottom_height + 2 * 0.05, // Add clearance to cylinder height
 clearance = 0.05
 ) {
-cube([width, height, depth]);
+    cube([width, height, depth]);
 }
 
 // Create a pair of slits with specified spacing
@@ -517,18 +523,18 @@ height = 4,
 depth = bottom_height + 2 * 0.05,
 spacing = 8.25
 ) {
-union() {
-for (position = [0, spacing]) {
-translate([position, 0, 0])
-create_slit(width, height, depth);
-}
-}
+    union() {
+        for (position = [0, spacing]) {
+            translate([position, 0, 0])
+                create_slit(width, height, depth);
+        }
+    }
 }
 
 // Legacy slit creation function - now uses horizontal slots instead of vertical slits
 // This is maintained for backward compatibility but not actually used anymore
 module legacy_millstone_slit_at_angle(
-offset_x = - 4.5,
+offset_x = -4.5,
 center_radius = 25,
 y_offset = 1.5,
 width = 0.75,
@@ -536,30 +542,30 @@ height = 0.75, // Height of horizontal slit (was vertical slit width)
 spacing = 8.25,
 cylinder_height = bottom_height
 ) {
-// This module is no longer needed as we've switched to horizontal slots
-// in the millstone_retainer_tab_segment module
-// This is kept for backward compatibility
+    // This module is no longer needed as we've switched to horizontal slots
+    // in the millstone_retainer_tab_segment module
+    // This is kept for backward compatibility
 }
 
 // Create a single top cutout (currently disabled in the original code)
 module top_cutout_at_angle(
 cutout_x = 23.5,
-cutout_y = - 1.5,
+cutout_y = -1.5,
 cutout_z = 7,
 cutout_width = 3,
 cutout_length = 4,
 cutout_height = 7.05
 ) {
-translate([cutout_x, cutout_y, cutout_z])
-cube([cutout_length, cutout_width, cutout_height]);
+    translate([cutout_x, cutout_y, cutout_z])
+        cube([cutout_length, cutout_width, cutout_height]);
 }
 
 // Create all top cutouts but deactivated
 module deactivated_legacy_top_cutouts(angles = [0, 180]) {
-for (angle = angles) {
-rotate([0, 0, angle])
-top_cutout_at_angle();
-}
+    for (angle = angles) {
+        rotate([0, 0, angle])
+            top_cutout_at_angle();
+    }
 }
 
 body();
