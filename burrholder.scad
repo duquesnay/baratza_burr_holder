@@ -35,54 +35,30 @@ module prism(l, w, h) {
 
 // Parameters for upper tabs
 upper_tab_width = 4.4;
-upper_tab_tip_angle = 45;
 upper_tab_base_spacing = 1.6;
 upper_tab_thickness = 1.6;
 upper_tab_connector_width = 2;
 upper_tab_connector_height_extension = 2;  // Added to shoulder_height
-upper_tab_angle_start_offset = 5;  // Added to shoulder_height
 upper_tab_positions = [45, 225];  // Angles around the circle where tabs are placed
-upper_tab_cut_clearance = 0.1;
-upper_tab_cut_height_clearance = 1;
 
-// Create a single tab with specified parameters
+// Create a single tab with specified parameters - simplified straight design
 module create_tab(
 width = 4,
 total_height = shoulder_height + top_height,
-tip_angle = upper_tab_tip_angle,
 base_spacing = upper_tab_base_spacing,
 thickness = upper_tab_thickness,
 connector_width = upper_tab_connector_width,
-connector_height = upper_tab_connector_height_extension + shoulder_height,
-angle_start_height = shoulder_height + upper_tab_angle_start_offset,
-cut_clearance = upper_tab_cut_clearance,
-cut_height_clearance = upper_tab_cut_height_clearance
+connector_height = upper_tab_connector_height_extension + shoulder_height
 ) {
-    // Calculated dimensions
-    bevel_angle = 90 - tip_angle;
-    angled_part_height = total_height - angle_start_height;
-    bevel_length = angled_part_height / cos(tip_angle) + thickness * tan(tip_angle);
-    bevel_height = bevel_length * cos(tip_angle);
+    // Create a simplified straight tab without angled top
+    union() {
+        // Connector to the main body - wider base for stability
+        translate([-connector_width / 2, 0, 0])
+            cube([connector_width, base_spacing, connector_height]);
 
-    difference() {
-        union() {
-            // Connector to the main body
-            translate([-connector_width / 2, 0, 0])
-                cube([connector_width, base_spacing, connector_height]);
-
-            // Lower part of tab
-            translate([-width / 2, base_spacing, 0])
-                cube([width, thickness, angle_start_height]);
-
-            // Upper angled part of tab
-            translate([-width / 2, base_spacing, angle_start_height])
-                rotate([-tip_angle, 0, 0])
-                    cube([width, thickness, bevel_length]);
-        }
-
-        // Cut at max height to create the beveled top edge
-        translate([-width / 2 - cut_clearance, base_spacing, total_height])
-            cube([width + 2 * cut_clearance, bevel_length + cut_height_clearance, bevel_height]);
+        // Main tab body - straight vertical tab
+        translate([-width / 2, base_spacing, 0])
+            cube([width, thickness, total_height]);
     }
 }
 
@@ -133,7 +109,7 @@ module top_part() {
 
 // Create the shoulder transition part with reinforcement
 module shoulder_transition(
-outer_radius = 26.8,
+outer_radius = 25.8,
 top_radius_val = top_radius,
 bevel_radius = 25.8,
 bevel_thickness = 1,
@@ -155,22 +131,22 @@ radius_clearance = 0.1
     }
 
     // Reverse thicker reinforcement with bevel for mechanical strength
-    rotate([0, 180, 0])
-        color("white") difference() {
-            // Beveled cylinder for reinforcement
-            beveled_cylinder(
-            r = bevel_radius + bevel_thickness,
-            h = extension,
-            b = bevel_thickness
-            );
-
-            // Inner cutout
-            translate([0, 0, -overlap_clearance])
-                cylinder(
-                r = inner_radius + radius_clearance,
-                h = extension + height_clearance
-                );
-        }
+//    rotate([0, 180, 0])
+//        color("white") difference() {
+//            // Beveled cylinder for reinforcement
+//            beveled_cylinder(
+//            r = bevel_radius + bevel_thickness,
+//            h = extension,
+//            b = bevel_thickness
+//            );
+//
+//            // Inner cutout
+//            translate([0, 0, -overlap_clearance])
+//                cylinder(
+//                r = inner_radius + radius_clearance,
+//                h = extension + height_clearance
+//                );
+//        }
 }
 
 // Legacy function for backward compatibility
