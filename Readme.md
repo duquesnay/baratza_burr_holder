@@ -35,14 +35,19 @@ To print with different settings some parameters should be adjusted:
 Recent updates:
 - BOSL2 library integration for advanced features
 - Replaced middle tab with thread_helix - smoother & stronger threads
-- Triple-start square thread design (0° angle) - quick & secure attachment
+- Triple-start trapezoidal thread design - quick & secure attachment
 - Thread params: 0.3 turns, 2mm pitch, 1.5mm depth, lead-in for easy engagement
+- Added beveled transitions to upper ring to eliminate stress points
+- Replaced vertical slits with horizontal slots for better layer strength
+- Inverted shoulder transition cone for better load distribution
+- Reorganized bottom cylinder segments with continuous walls for integrity
 
  ## Todos
 - [X] remove pointless cutouts on bottom top shoulder
-- [ ] replace burrholder tabs by horizontal, closed flexible spring system
-- [ ] remove useless shoulder between top and bottom
-- [ ] simplify top tabs for resistance and printing
+- [X] replace burrholder tabs by horizontal, closed flexible spring system
+- [X] remove useless shoulder between top and bottom
+- [X] replace top tabs as a full ring for resistance and printing
+- [X] thicken the stabiliser ridge to limit movement of the burr
 
 ## License
 
