@@ -38,8 +38,8 @@ Recent updates:
 - Triple-start square thread design (0° angle) - quick & secure attachment
 - Thread params: 0.3 turns, 2mm pitch, 1.5mm depth, lead-in for easy engagement
 
-Todo:
-- [ ] remove pointless cutouts on bottom top shoulder
+ ## Todos
+- [X] remove pointless cutouts on bottom top shoulder
 - [ ] replace burrholder tabs by horizontal, closed flexible spring system
 - [ ] remove useless shoulder between top and bottom
 - [ ] simplify top tabs for resistance and printing

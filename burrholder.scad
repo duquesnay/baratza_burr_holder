@@ -373,7 +373,7 @@ module millstone_cutout_slits_all() {
 // Apply cutouts
 module apply_cutouts() {
     // Apply top cutouts
-    top_cutouts();
+//    top_cutouts();
 
     // Apply millstone tab flexibility slits
     millstone_cutout_slits_all();
