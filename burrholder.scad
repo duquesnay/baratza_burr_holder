@@ -245,7 +245,7 @@ module millstone_retaining_tabs(
 tab_width = 7.5,
 tab_depth = 1.5,
 tab_length = side_holder_length,
-tab_angles = [180], // 0° tab moved to segment
+tab_angles = [0,180], // 0° tab moved to segment
 stone_thickness = 4.5,
 tab_height = bottom_height - shoulder_extension - 4.5, // Calculated from stone thickness
 cylinder_inner_radius = bottom_internal_radius
@@ -283,8 +283,8 @@ height_clearance = 0.1
     }
 }
 
-// Create a holder segment with the millstone holder integrated at 0°
-module zero_degree_holder_segment(
+// Create a holder segment with the millstone holder integrated
+module millstone_holder_segment(
 angle_width = 60, // Angular width of the segment
 outer_radius = bottom_radius,
 inner_radius = bottom_internal_radius,
@@ -293,78 +293,57 @@ tab_height = bottom_height - shoulder_extension - 4.5,
 overlap_clearance = 0.05,
 height_clearance = 0.1
 ) {
-    // Calculate the start and end angles to center the holder at 0°
+    // Calculate the start and end angles to center the holder at 180°
     half_width = angle_width / 2;
+    start_angle = -half_width; // 150°
+    end_angle = half_width;   // 210°
 
-    // Since our segment crosses 0°, we need to create two partial segments
-    // First segment: from (360-half_width) to 360°
-    // Second segment: from 0° to half_width
-    color("Purple")
-        difference() {
-            union() {
-                // First part: 330° to 360°
-                bottom_cylinder_segment(
-                start_angle = 360 - half_width,
-                end_angle = 360,
-                outer_radius = outer_radius,
-                inner_radius = inner_radius,
-                height = height,
-                overlap_clearance = overlap_clearance,
-                height_clearance = height_clearance
-                );
 
-                // Second part: 0° to 30°
-                bottom_cylinder_segment(
-                start_angle = 0,
-                end_angle = half_width,
-                outer_radius = outer_radius,
-                inner_radius = inner_radius,
-                height = height,
-                overlap_clearance = overlap_clearance,
-                height_clearance = height_clearance
-                );
-
-                // Add millstone holder (directly at 0° angle)
-                millstone_single_holder();
-
-                // Add millstone tab on the inside (directly at 0° angle)
-                translate([0, 0, tab_height])
-                    translate([0, inner_radius, 0])
-                        create_millstone_tab();
-            }
-
-            // Cut out slits for flexibility
-            millstone_slit_at_angle();
-        }
-}
-
-// Create the hollow bottom cylinder using segments
-module bottom_cylinder(
-outer_radius = bottom_radius,
-inner_radius = bottom_internal_radius,
-height = bottom_height,
-overlap_clearance = 0.05,
-height_clearance = 0.1
-) {
-    // Create the 0° holder segment (centered at 0° from 330° to 30°)
-    zero_degree_holder_segment();
-
-    // Create the remaining cylinder to complete the shape (from 30° to 330°)
-    color("orange")
+    union() {
+        // Create the cylinder segment
         bottom_cylinder_segment(
-        start_angle = 30,
-        end_angle = 330,
+        start_angle = start_angle,
+        end_angle = end_angle,
         outer_radius = outer_radius,
         inner_radius = inner_radius,
         height = height,
         overlap_clearance = overlap_clearance,
         height_clearance = height_clearance
         );
+
+        millstone_single_holder();
+
+    }
 }
 
-// Legacy function for backward compatibility
-module bottom_parts() {
-    bottom_cylinder();
+
+// Create the bottom cylinder from segments with integrated holders
+module bottom_parts(
+outer_radius = bottom_radius,
+inner_radius = bottom_internal_radius,
+height = bottom_height,
+overlap_clearance = 0.05,
+height_clearance = 0.1
+) {
+    // Create the holder segments at 0° and 180°
+    color("Purple")
+        for (angle = [0, 180]) {
+            rotate([0, 0, angle]) millstone_holder_segment();
+        }
+
+    // Create the plain wall segments
+    color("orange")
+        for (plain_angle = [[30, 150], [210, 330]]) {
+            bottom_cylinder_segment(
+            start_angle = plain_angle[0],
+            end_angle = plain_angle[1],
+            outer_radius = outer_radius,
+            inner_radius = inner_radius,
+            height = height,
+            overlap_clearance = overlap_clearance,
+            height_clearance = height_clearance
+            );
+        }
 }
 
 // Create a single millstone holder with grips
@@ -405,37 +384,6 @@ prism_z_level = 6
     }
 }
 
-// Create all millstone holders at their designated positions
-module millstone_holders(
-angles = [180], // Default angle where holder is placed (0° moved to segment)
-// Pass through other parameters
-wall_thickness = 1.5,
-width = 3,
-height = 6,
-cylinder_height = bottom_height,
-outer_radius = bottom_radius,
-prism_offset_y = 12,
-prism_height = 4,
-prism_depth = 2,
-prism_z_level = 6
-) {
-    for (angle = angles) {
-        rotate([0, 0, angle])
-            millstone_single_holder(
-            wall_thickness = wall_thickness,
-            width = width,
-            height = height,
-            cylinder_height = cylinder_height,
-            outer_radius = outer_radius,
-            prism_offset_y = prism_offset_y,
-            prism_height = prism_height,
-            prism_depth = prism_depth,
-            prism_z_level = prism_z_level
-            );
-    }
-}
-
-
 // Position parameters for main components
 middle_tabs_position = 5.5;
 
@@ -471,9 +419,6 @@ bottom_height_val = bottom_height
     // Bottom cylinder (no color wrapper to allow segment colors to show)
     bottom_parts();
 
-    // Millstone holders on the outside
-    color("Purple")
-        millstone_holders();
 }
 
 
@@ -541,16 +486,6 @@ module top_cutouts(angles = [0, 180]) {
     }
 }
 
-// Documentation module explaining the tab and slit system
-module millstone_tab_system() {
-    // Each tab position has both a physical tab and corresponding flexibility slits
-    // When modifying the tab design, this helps ensure both parts stay in sync
-
-    // Tabs are created by: millstone_retaining_tabs() with tab_angles = [0, 180]
-    // Slits are created by: millstone_all_slits() with angles = [0, 180]
-    // Both use the same default angles for positioning (0° and 180°)
-}
-
 // Create all slit cutouts at specified tab positions
 module millstone_all_slits(
 angles = [0, 180], // Same angles as the millstone tabs
@@ -610,10 +545,18 @@ union() {
 
     // Debug visualization
     if (debug_visualize_cutouts == 1) {
-        // Show millstone tab slits with alternating colors for clarity
-        tab_angles = [0, 180]; // Same angles used for millstone tabs
+        // Show integrated slits (now managed by segments)
+        color("red", 0.3)
+            millstone_slit_at_angle();
+
+        color("blue", 0.3)
+            rotate([0, 0, 180])
+                millstone_slit_at_angle();
+
+        // Show any additional slits from millstone_all_slits
+        tab_angles = []; // Additional angles if needed
         for (i = [0:len(tab_angles) - 1]) {
-            color(i % 2 == 0 ? "red" : "blue", 0.3)
+            color(i % 2 == 0 ? "purple" : "green", 0.3)
                 rotate([0, 0, tab_angles[i]])
                     millstone_slit_at_angle();
         }
