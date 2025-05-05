@@ -143,35 +143,23 @@ module create_middle_tab() {
     tab_width = 40;
     middle_tab_height = 0.8; // [0.5:0.1:2]
     tab_half_width = tab_width / 2;
+    
+    // Thread parameters
     pitch = 2;
-    thread_width = 0.8;  // Make thread thinner (1mm in total width)
-    thread_depth = 2;  // Make thread thinner (1mm in total width)
-    //    chamfer_size = 0.8; // Size of the chamfer on the outer edge
-    // Thread angle for 2mm rise per 120 degrees
-    //thread_angle = -2.2; // Calculated helix angle for the given pitch
+    thread_depth = 1.5;  // Reduced from 2mm to prevent CGAL errors
+    thread_angle = 0;    // Square thread profile
 
-    // Define custom square thread profile
-
-    // Keep the original uncentered profile
-    external_ridge_height = 0.3;
-    shoulder_straight_overhang_depth = 0.6;
-    profile_pts = [
-            [-pitch / 2, 0], // Start at bottom left
-            [0, 0], // Up 1.5mm (thread depth)
-            [0, thread_depth], // Up 1.5mm (thread depth)
-            [external_ridge_height, thread_depth], // Up 1.5mm (thread depth)
-            [thread_width, shoulder_straight_overhang_depth], // Down (thread depth)
-            [thread_width, 0], // Down (thread depth)
-        ];
-
+    // Create standard thread helix instead of custom profile
+    // This provides better compatibility with CGAL renderer
     thread_helix(
     turns = 0.3,
     d = (bottom_radius) * 2, // Outer diameter
-    pitch = pitch, // Distance between complete turns
-    starts = 3,
-    profile = profile_pts, // Use custom profile
+    pitch = pitch,           // Distance between complete turns
+    starts = 3,              // Triple-start thread
+    thread_depth = thread_depth,
+    thread_angle = thread_angle,
     left_handed = true,
-    lead_in1 = 2
+    lead_in1 = 1.5           // Slightly reduced lead-in to prevent geometry errors
     );
 
     // Apply a rotation to the original tab to create the helix effect
