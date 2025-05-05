@@ -231,56 +231,32 @@ module middle_tabs() {
 
 // Create a single millstone tab
 module create_millstone_tab(
-width = 7.5,
-depth = 1.5,
-length = side_holder_length
+width,
+depth,
+length,
 ) {
     translate([-width / 2, 0, 0])
         rotate([90, 0, 0])
             prism(width, depth, length);
 }
 
-// Create all millstone retaining tabs around the cylinder
-module millstone_retaining_tabs(
-tab_width = 7.5,
-tab_depth = 1.5,
-tab_length = side_holder_length,
-tab_angles = [0,180], // 0° tab moved to segment
-stone_thickness = 4.5,
-tab_height = bottom_height - shoulder_extension - 4.5, // Calculated from stone thickness
-cylinder_inner_radius = bottom_internal_radius
-) {
-    translate([0, 0, tab_height])
-        for (angle = tab_angles) {
-            rotate([0, 0, angle])
-                translate([0, cylinder_inner_radius, 0])
-                    create_millstone_tab(tab_width, tab_depth, tab_length);
-        }
-}
-
 // Create a segment of the hollow bottom cylinder
 module bottom_cylinder_segment(
-start_angle = 0,
-end_angle = 90,
+start_angle,
+end_angle,
 outer_radius = bottom_radius,
 inner_radius = bottom_internal_radius,
 height = bottom_height,
-overlap_clearance = 0.05,
-height_clearance = 0.1
+overlap_clearance = 0,
+height_clearance = 0
 ) {
     angle_span = end_angle - start_angle;
 
-    difference() {
-        // Outer segment
-        rotate([0, 0, start_angle])
-            rotate_extrude(angle = angle_span)
-                translate([0, 0, 0])
-                    square([outer_radius, height]);
-
-        // Inner hollow (with clearance for clean difference operation)
-        translate([0, 0, -overlap_clearance])
-            cylinder(r = inner_radius, h = height + height_clearance);
-    }
+    // Outer segment
+    rotate([0, 0, start_angle])
+        rotate_extrude(angle = angle_span)
+            translate([inner_radius, 0, 0])
+                square([outer_radius - inner_radius, height]);
 }
 
 // Create a holder segment with the millstone holder integrated
@@ -293,11 +269,10 @@ tab_height = bottom_height - shoulder_extension - 4.5,
 overlap_clearance = 0.05,
 height_clearance = 0.1
 ) {
-    // Calculate the start and end angles to center the holder at 180°
+    // Calculate the start and end angles to center the holder at 0°
     half_width = angle_width / 2;
-    start_angle = -half_width; // 150°
-    end_angle = half_width;   // 210°
-
+    start_angle = -half_width;
+    end_angle = half_width;
 
     union() {
         // Create the cylinder segment
@@ -312,12 +287,42 @@ height_clearance = 0.1
         );
 
         millstone_single_holder();
-
     }
 }
 
+// Create a segment with millstone retaining tab and flexibility slit
+module millstone_retainer_tab_segment(
+angle_width,
+height = bottom_height,
+tab_height = bottom_height - shoulder_extension - 4.5,
+tab_width = 7.5,
+tab_depth = 1.5,
+outer_radius = bottom_radius,
+inner_radius = bottom_internal_radius,
+tab_length = side_holder_length,
+slit_width = 0.75,
+) {
+    // Calculate the start and end angles to center the tab
+    half_width = (angle_width - slit_width) / 2;
+    start_angle = -half_width;
+    end_angle = half_width;
 
-// Create the bottom cylinder from segments with integrated holders
+    union() {
+        // Create the cylinder segment minus the slit
+        union() {
+            bottom_cylinder_segment(
+            start_angle = start_angle,
+            end_angle = end_angle,
+            height = height
+            );
+        }
+        rotate([0, 0, -90]) // no idea why
+            translate([0, inner_radius, tab_height])
+                create_millstone_tab(tab_width, tab_depth, tab_length);
+    }
+}
+
+// Create the bottom cylinder from segments with integrated holders and retainer tabs
 module bottom_parts(
 outer_radius = bottom_radius,
 inner_radius = bottom_internal_radius,
@@ -326,23 +331,44 @@ overlap_clearance = 0.05,
 height_clearance = 0.1
 ) {
     // Create the holder segments at 0° and 180°
+    millstone_holder_segment_width = 60;
+    millstone_retainer_segment_width = 30;
     color("Purple")
         for (angle = [0, 180]) {
-            rotate([0, 0, angle]) millstone_holder_segment();
+            rotate([0, 0, angle])
+                millstone_holder_segment(angle_width = millstone_holder_segment_width);
         }
 
-    // Create the plain wall segments
+    // Create the retainer tab segments at 90° and 270° to match original design
+    color("Lime")
+        for (angle = [90, 270]) {
+            // No additional rotation needed - tab is already centered at these angles in the segment
+            rotate([0, 0, angle])
+                // Create the retainer tab segment
+                millstone_retainer_tab_segment(angle_width = millstone_retainer_segment_width);
+        }
+
+    half_retainer_width = millstone_retainer_segment_width / 2;
+    half_holder_width = millstone_holder_segment_width / 2;
+    // Create the plain wall segments - adjusted to avoid both holder and retainer segments
     color("orange")
-        for (plain_angle = [[30, 150], [210, 330]]) {
-            bottom_cylinder_segment(
-            start_angle = plain_angle[0],
-            end_angle = plain_angle[1],
-            outer_radius = outer_radius,
-            inner_radius = inner_radius,
-            height = height,
-            overlap_clearance = overlap_clearance,
-            height_clearance = height_clearance
-            );
+        union() {
+            for (segment_angles = [
+                    [half_holder_width, 90 - half_retainer_width],
+                    [90 + half_retainer_width, 180 - half_holder_width],
+                    [180 + half_holder_width, 270 - half_retainer_width],
+                    [270 + half_retainer_width, 360 - half_holder_width]
+                ]) {
+                bottom_cylinder_segment(
+                start_angle = segment_angles[0],
+                end_angle = segment_angles[1],
+                outer_radius = outer_radius,
+                inner_radius = inner_radius,
+                height = height,
+                overlap_clearance = overlap_clearance,
+                height_clearance = height_clearance
+                );
+            }
         }
 }
 
@@ -411,12 +437,6 @@ bottom_height_val = bottom_height
             middle_tabs();
 
     // Bottom section components
-
-    // Millstone retaining tabs on inside
-    color("Lime")
-        millstone_retaining_tabs();
-
-    // Bottom cylinder (no color wrapper to allow segment colors to show)
     bottom_parts();
 
 }
@@ -440,28 +460,28 @@ depth = bottom_height + 2 * 0.05,
 spacing = 8.25
 ) {
     union() {
-        create_slit(width, height, depth);
-        translate([spacing, 0, 0])
-            create_slit(width, height, depth);
+        for (position = [0, spacing]) {
+            translate([position, 0, 0])
+                create_slit(width, height, depth);
+        }
     }
 }
 
 // Create slits for a single tab position
-module millstone_slit_at_angle(
+module deactivated_millstone_slit_at_angle(
 offset_x = -4.5,
 center_radius = 25,
 y_offset = 1.5,
 width = 0.75,
 height = 4,
 spacing = 8.25,
-clearance = 0.05,
 cylinder_height = bottom_height
 ) {
     // Calculate final position
     slit_offset_y = -(center_radius + y_offset);
-    total_depth = cylinder_height + 2 * clearance;
+    total_depth = cylinder_height;
 
-    translate([offset_x, slit_offset_y, -clearance])
+    translate([offset_x, slit_offset_y, 0])
         create_slit_pair(width, height, total_depth, spacing);
 }
 
@@ -478,91 +498,12 @@ cutout_height = 7.05
         cube([cutout_length, cutout_width, cutout_height]);
 }
 
-// Create all top cutouts
-module top_cutouts(angles = [0, 180]) {
+// Create all top cutouts but deactivated
+module deactivated_legacy_top_cutouts(angles = [0, 180]) {
     for (angle = angles) {
         rotate([0, 0, angle])
             top_cutout_at_angle();
     }
 }
 
-// Create all slit cutouts at specified tab positions
-module millstone_all_slits(
-angles = [0, 180], // Same angles as the millstone tabs
-// Pass through all other parameters with defaults
-offset_x = -4.5,
-center_radius = 25,
-y_offset = 1.5,
-width = 0.75,
-height = 4,
-spacing = 8.25,
-clearance = 0.05,
-cylinder_height = bottom_height
-) {
-    for (angle = angles) {
-        rotate([0, 0, angle])
-            millstone_slit_at_angle(
-            offset_x = offset_x,
-            center_radius = center_radius,
-            y_offset = y_offset,
-            width = width,
-            height = height,
-            spacing = spacing,
-            clearance = clearance,
-            cylinder_height = cylinder_height
-            );
-    }
-}
-
-// Legacy function for backward compatibility
-module millstone_cutouts_slits() {
-    millstone_slit_at_angle();
-}
-
-// Legacy function for backward compatibility
-module millstone_cutout_slits_all() {
-    millstone_all_slits();
-}
-
-// Apply all cutouts to the model
-module apply_cutouts() {
-    // Apply top cutouts (commented out in original code)
-    // top_cutouts();
-
-    // Apply millstone tab flexibility slits
-    millstone_all_slits();
-}
-
-// Final assembly
-union() {
-    difference() {
-        // Main body with all components
-        body();
-
-        // Apply cutouts
-        apply_cutouts();
-    }
-
-    // Debug visualization
-    if (debug_visualize_cutouts == 1) {
-        // Show integrated slits (now managed by segments)
-        color("red", 0.3)
-            millstone_slit_at_angle();
-
-        color("blue", 0.3)
-            rotate([0, 0, 180])
-                millstone_slit_at_angle();
-
-        // Show any additional slits from millstone_all_slits
-        tab_angles = []; // Additional angles if needed
-        for (i = [0:len(tab_angles) - 1]) {
-            color(i % 2 == 0 ? "purple" : "green", 0.3)
-                rotate([0, 0, tab_angles[i]])
-                    millstone_slit_at_angle();
-        }
-
-        // Visualize top cutouts (currently disabled)
-        color("yellow", 0.3)
-            top_cutouts();
-    }
-}
+body();
