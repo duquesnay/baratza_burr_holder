@@ -339,17 +339,21 @@ closed_gap_width = 0.75,
 
         // Add horizontal flexibility slots instead of vertical slits
         // These will follow the print layers for better strength
-        slot_height = 0.75;
-        slot_depth = outer_radius - inner_radius + 0.2; // Slightly deeper than wall thickness
-        slot_spacing = 2.0;
-
-        // Create 3 horizontal slots for flexibility
-        for (slot_y = [height / 4, height / 2, 3 * height / 4]) {
-            translate([0, 0, slot_y - slot_height / 2])
-                rotate([0, 0, (start_angle + end_angle) / 2])  // Center of the segment
-                    translate([inner_radius - 0.1, 0, 0])    // Position at inner wall with slight overlap
-                        cube([slot_depth, closed_gap_width, slot_height]);
-        }
+        slot_height = 0.75;                      // Height of the slots
+        slot_depth = outer_radius - inner_radius + 0.2; // Wall thickness plus overlap
+        
+        // Offset distance from tab center
+        slot_offset = 2;                         // Distance from tab in mm
+        
+        // First slot - above the tab
+        translate([0, -angle_width/5, tab_height + slot_offset])
+            rotate([0, 0, 0])
+                cube([slot_depth, angle_width/2.5, slot_height]);
+                
+        // Second slot - below the tab
+        translate([0, -angle_width/5, tab_height - slot_offset - slot_height])
+            rotate([0, 0, 0])
+                cube([slot_depth, angle_width/2.5, slot_height]);
     }
 }
 
