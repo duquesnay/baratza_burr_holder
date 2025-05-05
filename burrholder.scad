@@ -94,12 +94,12 @@ outer_radius = 25.8  // Same as shoulder_transition outer_radius default
         difference() {
             // Outer cylinder for the ring
             cylinder(r = outer_radius, h = height);
-            
+
             // Inner cutout to create the ring
             translate([0, 0, -0.1])
                 cylinder(r = inner_radius + base_spacing, h = height + 0.2);
         }
-        
+
         // Add connectors at exactly the same positions as the original tabs
         // with the original connector height
         for (angle = connector_positions) {
@@ -184,20 +184,22 @@ middle_tab_lead_in = 2;
 middle_tab_left_handed = true;
 
 // Middle tab with helix angle for threading onto the grinder
-module create_middle_tab(
-// Parameters with defaults that match the original values
-radius = bottom_radius,
-pitch = middle_tab_pitch,
-thread_width = middle_tab_thread_width,
-thread_depth = middle_tab_thread_depth,
-ridge_height = middle_tab_external_ridge_height,
-shoulder_depth = middle_tab_shoulder_overhang_depth,
-turns = middle_tab_turns,
-starts = middle_tab_starts,
-lead_in = middle_tab_lead_in,
-left_handed = middle_tab_left_handed
-) {
-    // Define custom thread profile
+module create_middle_tab() {
+    // Tab dimensions
+    tab_position = bottom_radius - 4.5;
+    tab_radius_extension = 6.5;
+    tab_width = 40;
+    middle_tab_height = 0.8; // [0.5:0.1:2]
+    tab_half_width = tab_width / 2;
+
+    // Thread parameters that work with CGAL renderer
+    pitch = 2;
+    thread_depth = 1.5;      // Reduced from 2mm to prevent CGAL errors
+
+    // Use thread_angle to create a trapezoid profile with upper bevel
+    // This is more reliable than a custom profile for CGAL rendering
+    thread_angle = 30;       // Creates a 30° angled side for the thread
+
     profile_pts = [
             [-pitch / 2, 0], // Start at bottom left
             [0, 0], // Bottom right corner
@@ -206,16 +208,17 @@ left_handed = middle_tab_left_handed
             [thread_width, shoulder_depth], // Down to shoulder
             [thread_width, 0], // Back to bottom
         ];
-
-    // Create thread helix with the custom profile
+    // Create thread helix with built-in trapezoid profile
+    // This has better compatibility with CGAL renderer
     thread_helix(
-    turns = turns,
-    d = radius * 2, // Outer diameter
-    pitch = pitch, // Distance between complete turns
-    starts = starts,
-    profile = profile_pts, // Use custom profile
-    left_handed = left_handed,
-    lead_in1 = lead_in
+        turns = 0.25,             // Reduced slightly from 0.3
+        d = (bottom_radius) * 2,  // Outer diameter
+        pitch = pitch,            // Distance between complete turns
+        starts = 3,               // Triple-start thread
+        thread_depth = thread_depth,
+        thread_angle = thread_angle,  // Creates trapezoid with angle for upper bevel
+        left_handed = true,
+        lead_in1 = 1              // Reduced lead-in to prevent geometry errors
     );
 }
 
@@ -430,7 +433,7 @@ bottom_height_val = bottom_height
 
         // Shoulder transition
         shoulder_part();
-        
+
         // Upper ring around the top cylinder
         upper_ring();
     }
