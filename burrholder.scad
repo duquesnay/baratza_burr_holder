@@ -1,3 +1,7 @@
+// Include BOSL2 library
+include <BOSL2/std.scad>
+include <BOSL2/threading.scad>
+
 // Quality settings
 $fa = 0.1;
 $fs = 0.4;
@@ -135,36 +139,45 @@ module shoulder_part() {
 module create_middle_tab() {
     // Tab dimensions
     tab_position = bottom_radius - 4.5;
-    tab_radius_extension = 7;
-    tab_width = 30;
+    tab_radius_extension = 6.5;
+    tab_width = 40;
     middle_tab_height = 0.8; // [0.5:0.1:2]
-    tab_half_width = 4;
+    tab_half_width = tab_width / 2;
+    chamfer_size = 0.8; // Size of the chamfer on the outer edge
 
     // Thread angle for 2mm rise per 120 degrees
     thread_angle = -2.2; // Calculated helix angle for the given pitch
+    thread_helix(
+    turns=0.3,
+    d = (bottom_radius) * 2, // Outer diameter
+    pitch = 2, // Distance between complete turns
+    starts = 3,
+    thread_depth = 1.5,
+    thread_angle = 0,
+    left_handed = true,
+    lead_in1 = 2
+    );
 
     // Apply a rotation to the original tab to create the helix effect
+    //difference() {
+    //        buttress_threaded_rod(
+    //        d = (tab_position + tab_radius_extension) * 2, // Outer diameter
+    //        l = 3, // Length/height
+    //        pitch = 2, // Distance between complete turns
+    //        starts = 3, // 3 parallel threads (3 starting points)
+    //        left_handed = true,
+    ////        thread_depth = 2,
+    //        blunt_start2 = true
+    //        );
+    //        translate([0, 0, -10])
+    //            cylinder(h = 20, r = bottom_internal_radius);
 
-    intersection() {
-        // Limit to cylinder surface
-        difference() {
-            cylinder(h = shoulder_height, r = tab_position + tab_radius_extension);
-            cylinder(h = shoulder_height, r = bottom_internal_radius);
-        }
-        // Rotate the tab with X-axis rotation for the thread helix effect
-        // The rotation center is at the inner edge where the tab meets the cylinder
-        translate([0, tab_half_width, 0])
-            rotate([thread_angle, 0, 0])
-                translate([0, -tab_width, 0])
-                    cube([tab_position + tab_position + tab_radius_extension, tab_width, middle_tab_height]);
-    }
+    //}
+
 }
 
 module middle_tabs() {
-    for (angle = [0, 120, 240]) {
-        rotate([0, 0, angle])
-            create_middle_tab();
-    }
+    create_middle_tab();
 }
 
 // Parameters for millstone retaining tabs
