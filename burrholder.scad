@@ -143,17 +143,33 @@ module create_middle_tab() {
     tab_width = 40;
     middle_tab_height = 0.8; // [0.5:0.1:2]
     tab_half_width = tab_width / 2;
-    chamfer_size = 0.8; // Size of the chamfer on the outer edge
-
+    pitch = 2;
+    thread_width = 0.8;  // Make thread thinner (1mm in total width)
+    thread_depth = 2;  // Make thread thinner (1mm in total width)
+    //    chamfer_size = 0.8; // Size of the chamfer on the outer edge
     // Thread angle for 2mm rise per 120 degrees
-    thread_angle = -2.2; // Calculated helix angle for the given pitch
+    //thread_angle = -2.2; // Calculated helix angle for the given pitch
+
+    // Define custom square thread profile
+
+    // Keep the original uncentered profile
+    external_ridge_height = 0.3;
+    shoulder_straight_overhang_depth = 0.6;
+    profile_pts = [
+            [-pitch / 2, 0], // Start at bottom left
+            [0, 0], // Up 1.5mm (thread depth)
+            [0, thread_depth], // Up 1.5mm (thread depth)
+            [external_ridge_height, thread_depth], // Up 1.5mm (thread depth)
+            [thread_width, shoulder_straight_overhang_depth], // Down (thread depth)
+            [thread_width, 0], // Down (thread depth)
+        ];
+
     thread_helix(
-    turns=0.3,
+    turns = 0.3,
     d = (bottom_radius) * 2, // Outer diameter
-    pitch = 2, // Distance between complete turns
+    pitch = pitch, // Distance between complete turns
     starts = 3,
-    thread_depth = 1.5,
-    thread_angle = 0,
+    profile = profile_pts, // Use custom profile
     left_handed = true,
     lead_in1 = 2
     );
@@ -325,12 +341,15 @@ module top_cutouts() {
         translate([cutout_x, cutout_y, cutout_z])
             cube([cutout_length, cutout_width, cutout_height]);
     }
-
+    
     // Create two cutouts at opposite sides
-    top_cutout_cube();
-    rotate([0, 0, 180])
-        top_cutout_cube();
+    top_cutout_angles = [0, 180];
+    for (angle = top_cutout_angles) {
+        rotate([0, 0, angle])
+            top_cutout_cube();
+    }
 }
+
 
 // Millstone Tab and Slit System - Documentation
 // This module doesn't render anything, it's documentation for the design
