@@ -80,20 +80,32 @@ upper_ring_thickness = 1.6;       // Thickness of the vertical ring
 upper_ring_height = 8;            // Height of the vertical ring
 upper_ring_base_spacing = 1.6;    // Spacing between body and ring
 
-// Create a continuous vertical ring around the top cylinder
+// Create a continuous vertical ring around the top cylinder with connectors
 module upper_ring(
 thickness = upper_ring_thickness,
 height = upper_ring_height,
 base_spacing = upper_ring_base_spacing,
+connector_positions = upper_tab_positions,
+connector_width = upper_tab_connector_width,
 radius = top_radius
 ) {
-    color("red") difference() {
-        // Outer cylinder for the ring
-        cylinder(r = radius + base_spacing + thickness, h = height);
+    color("red") union() {
+        // Main ring
+        difference() {
+            // Outer cylinder for the ring
+            cylinder(r = radius + base_spacing + thickness, h = height);
+            
+            // Inner cutout to create the ring
+            translate([0, 0, -0.1])
+                cylinder(r = radius + base_spacing, h = height + 0.2);
+        }
         
-        // Inner cutout to create the ring
-        translate([0, 0, -0.1])
-            cylinder(r = radius + base_spacing, h = height + 0.2);
+        // Add connectors at exactly the same positions as the original tabs
+        for (angle = connector_positions) {
+            rotate([0, 0, angle])
+                translate([-connector_width / 2, radius, 0])
+                    cube([connector_width, base_spacing, height]);
+        }
     }
 }
 
