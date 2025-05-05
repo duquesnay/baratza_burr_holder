@@ -111,7 +111,7 @@ module top_part() {
 module shoulder_transition(
 outer_radius = 25.8,
 top_radius_val = top_radius,
-bevel_radius = 25.8,
+bevel_radius = outer_radius,
 bevel_thickness = 1,
 height = shoulder_height,
 extension = shoulder_extension,
@@ -130,23 +130,6 @@ radius_clearance = 0.1
             cylinder(r = top_radius_val, h = height + height_clearance);
     }
 
-    // Reverse thicker reinforcement with bevel for mechanical strength
-//    rotate([0, 180, 0])
-//        color("white") difference() {
-//            // Beveled cylinder for reinforcement
-//            beveled_cylinder(
-//            r = bevel_radius + bevel_thickness,
-//            h = extension,
-//            b = bevel_thickness
-//            );
-//
-//            // Inner cutout
-//            translate([0, 0, -overlap_clearance])
-//                cylinder(
-//                r = inner_radius + radius_clearance,
-//                h = extension + height_clearance
-//                );
-//        }
 }
 
 // Legacy function for backward compatibility
