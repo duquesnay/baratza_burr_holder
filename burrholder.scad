@@ -22,6 +22,7 @@ shoulder_extension = 1.5;
 // Tabs - Dimensions
 side_holder_length = 1.2; // [1:0.1:2]
 
+
 // Configuration options
 debug_visualize_cutouts = 0; // [0, 1] - Set to 1 to see colored cutout shapes
 
@@ -309,14 +310,15 @@ slit_width = 0.75,
 
     union() {
         // Create the cylinder segment minus the slit
-        union() {
-            bottom_cylinder_segment(
+        bottom_cylinder_segment(
             start_angle = start_angle,
             end_angle = end_angle,
             height = height
-            );
-        }
-        rotate([0, 0, -90]) // no idea why
+        );
+        
+        // Add the millstone tab - rotated to align perpendicular to the cylinder radius
+        // The -90° rotation positions the tab at right angles to the segment's central angle
+        rotate([0, 0, -90])
             translate([0, inner_radius, tab_height])
                 create_millstone_tab(tab_width, tab_depth, tab_length);
     }
@@ -330,13 +332,20 @@ height = bottom_height,
 overlap_clearance = 0.05,
 height_clearance = 0.1
 ) {
+    // Local parameter definitions for better readability
+    holder_segment_width = 60;     // Angular width of holder segments at 0° and 180°
+    retainer_segment_width = 30;   // Angular width of retainer segments at 90° and 270°
+    slit_width = 0.75;             // Width of gap between segments acting as flexibility slits
+    
+    // Calculate half-widths for angle calculations
+    half_retainer_width = retainer_segment_width / 2;
+    half_holder_width = holder_segment_width / 2;
+    
     // Create the holder segments at 0° and 180°
-    millstone_holder_segment_width = 60;
-    millstone_retainer_segment_width = 30;
     color("Purple")
         for (angle = [0, 180]) {
             rotate([0, 0, angle])
-                millstone_holder_segment(angle_width = millstone_holder_segment_width);
+                millstone_holder_segment(angle_width = holder_segment_width);
         }
 
     // Create the retainer tab segments at 90° and 270° to match original design
@@ -344,12 +353,13 @@ height_clearance = 0.1
         for (angle = [90, 270]) {
             // No additional rotation needed - tab is already centered at these angles in the segment
             rotate([0, 0, angle])
-                // Create the retainer tab segment
-                millstone_retainer_tab_segment(angle_width = millstone_retainer_segment_width);
+                // Create the retainer tab segment with slit space reserved
+                millstone_retainer_tab_segment(
+                    angle_width = retainer_segment_width,
+                    slit_width = slit_width
+                );
         }
 
-    half_retainer_width = millstone_retainer_segment_width / 2;
-    half_holder_width = millstone_holder_segment_width / 2;
     // Create the plain wall segments - adjusted to avoid both holder and retainer segments
     color("orange")
         union() {
@@ -360,13 +370,13 @@ height_clearance = 0.1
                     [270 + half_retainer_width, 360 - half_holder_width]
                 ]) {
                 bottom_cylinder_segment(
-                start_angle = segment_angles[0],
-                end_angle = segment_angles[1],
-                outer_radius = outer_radius,
-                inner_radius = inner_radius,
-                height = height,
-                overlap_clearance = overlap_clearance,
-                height_clearance = height_clearance
+                    start_angle = segment_angles[0],
+                    end_angle = segment_angles[1],
+                    outer_radius = outer_radius,
+                    inner_radius = inner_radius,
+                    height = height,
+                    overlap_clearance = overlap_clearance,
+                    height_clearance = height_clearance
                 );
             }
         }
@@ -467,8 +477,8 @@ spacing = 8.25
     }
 }
 
-// Create slits for a single tab position
-module deactivated_millstone_slit_at_angle(
+// Legacy slit creation function - no longer used with parametric spacing approach
+module legacy_millstone_slit_at_angle(
 offset_x = -4.5,
 center_radius = 25,
 y_offset = 1.5,
