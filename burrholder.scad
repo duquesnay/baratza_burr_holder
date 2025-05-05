@@ -258,7 +258,32 @@ module millstone_retaining_tabs(
         }
 }
 
-// Create the hollow bottom cylinder
+// Create a segment of the hollow bottom cylinder
+module bottom_cylinder_segment(
+    start_angle = 0,
+    end_angle = 90,
+    outer_radius = bottom_radius,
+    inner_radius = bottom_internal_radius,
+    height = bottom_height,
+    overlap_clearance = 0.05,
+    height_clearance = 0.1
+) {
+    angle_span = end_angle - start_angle;
+    
+    difference() {
+        // Outer segment
+        rotate([0, 0, start_angle])
+            rotate_extrude(angle = angle_span)
+                translate([0, 0, 0])
+                    square([outer_radius, height]);
+        
+        // Inner hollow (with clearance for clean difference operation)
+        translate([0, 0, -overlap_clearance])
+            cylinder(r = inner_radius, h = height + height_clearance);
+    }
+}
+
+// Create the hollow bottom cylinder using a full segment (360°)
 module bottom_cylinder(
     outer_radius = bottom_radius,
     inner_radius = bottom_internal_radius,
@@ -266,14 +291,16 @@ module bottom_cylinder(
     overlap_clearance = 0.05,
     height_clearance = 0.1
 ) {
-    difference() {
-        // Outer cylinder
-        cylinder(r = outer_radius, h = height);
-        
-        // Inner hollow (with clearance for clean difference operation)
-        translate([0, 0, -overlap_clearance])
-            cylinder(r = inner_radius, h = height + height_clearance);
-    }
+    // Use a full 360° segment instead of a regular cylinder
+    bottom_cylinder_segment(
+        start_angle = 0, 
+        end_angle = 360,
+        outer_radius = outer_radius,
+        inner_radius = inner_radius,
+        height = height,
+        overlap_clearance = overlap_clearance,
+        height_clearance = height_clearance
+    );
 }
 
 // Legacy function for backward compatibility
@@ -349,6 +376,7 @@ module millstone_holders(
     }
 }
 
+
 // Position parameters for main components
 middle_tabs_position = 5.5;
 
@@ -389,6 +417,7 @@ module body(
     color("Purple")
         millstone_holders();
 }
+
 
 // Create a single flexibility slit
 module create_slit(
