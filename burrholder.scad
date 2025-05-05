@@ -144,22 +144,25 @@ module create_middle_tab() {
     middle_tab_height = 0.8; // [0.5:0.1:2]
     tab_half_width = tab_width / 2;
     
-    // Thread parameters
+    // Thread parameters that work with CGAL renderer
     pitch = 2;
-    thread_depth = 1.5;  // Reduced from 2mm to prevent CGAL errors
-    thread_angle = 0;    // Square thread profile
-
-    // Create standard thread helix instead of custom profile
-    // This provides better compatibility with CGAL renderer
+    thread_depth = 1.5;      // Reduced from 2mm to prevent CGAL errors
+    
+    // Use thread_angle to create a trapezoid profile with upper bevel
+    // This is more reliable than a custom profile for CGAL rendering
+    thread_angle = 30;       // Creates a 30° angled side for the thread
+    
+    // Create thread helix with built-in trapezoid profile 
+    // This has better compatibility with CGAL renderer
     thread_helix(
-    turns = 0.3,
-    d = (bottom_radius) * 2, // Outer diameter
-    pitch = pitch,           // Distance between complete turns
-    starts = 3,              // Triple-start thread
-    thread_depth = thread_depth,
-    thread_angle = thread_angle,
-    left_handed = true,
-    lead_in1 = 1.5           // Slightly reduced lead-in to prevent geometry errors
+        turns = 0.25,             // Reduced slightly from 0.3
+        d = (bottom_radius) * 2,  // Outer diameter
+        pitch = pitch,            // Distance between complete turns
+        starts = 3,               // Triple-start thread
+        thread_depth = thread_depth,
+        thread_angle = thread_angle,  // Creates trapezoid with angle for upper bevel
+        left_handed = true,
+        lead_in1 = 1              // Reduced lead-in to prevent geometry errors
     );
 
     // Apply a rotation to the original tab to create the helix effect
