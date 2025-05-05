@@ -111,7 +111,6 @@ module top_part() {
 module shoulder_transition(
 outer_radius = 25.8,
 top_radius_val = top_radius,
-bevel_radius = outer_radius,
 bevel_thickness = 1,
 height = shoulder_height,
 extension = shoulder_extension,
@@ -120,6 +119,7 @@ overlap_clearance = 0.05,
 height_clearance = 0.1,
 radius_clearance = 0.1
 ) {
+    bevel_radius = outer_radius;
     // Main shoulder transition (conical ring)
     color("blue") difference() {
         // Outer tapered cylinder
@@ -270,11 +270,11 @@ slit_width = 0.75,
     union() {
         // Create the cylinder segment minus the slit
         bottom_cylinder_segment(
-            start_angle = start_angle,
-            end_angle = end_angle,
-            height = height
+        start_angle = start_angle,
+        end_angle = end_angle,
+        height = height
         );
-        
+
         // Add the millstone tab - rotated to align perpendicular to the cylinder radius
         // The -90° rotation positions the tab at right angles to the segment's central angle
         rotate([0, 0, -90])
@@ -295,11 +295,11 @@ height_clearance = 0.1
     holder_segment_width = 60;     // Angular width of holder segments at 0° and 180°
     retainer_segment_width = 30;   // Angular width of retainer segments at 90° and 270°
     slit_width = 0.75;             // Width of gap between segments acting as flexibility slits
-    
+
     // Calculate half-widths for angle calculations
     half_retainer_width = retainer_segment_width / 2;
     half_holder_width = holder_segment_width / 2;
-    
+
     // Create the holder segments at 0° and 180°
     color("Purple")
         for (angle = [0, 180]) {
@@ -314,8 +314,8 @@ height_clearance = 0.1
             rotate([0, 0, angle])
                 // Create the retainer tab segment with slit space reserved
                 millstone_retainer_tab_segment(
-                    angle_width = retainer_segment_width,
-                    slit_width = slit_width
+                angle_width = retainer_segment_width,
+                slit_width = slit_width
                 );
         }
 
@@ -329,13 +329,13 @@ height_clearance = 0.1
                     [270 + half_retainer_width, 360 - half_holder_width]
                 ]) {
                 bottom_cylinder_segment(
-                    start_angle = segment_angles[0],
-                    end_angle = segment_angles[1],
-                    outer_radius = outer_radius,
-                    inner_radius = inner_radius,
-                    height = height,
-                    overlap_clearance = overlap_clearance,
-                    height_clearance = height_clearance
+                start_angle = segment_angles[0],
+                end_angle = segment_angles[1],
+                outer_radius = outer_radius,
+                inner_radius = inner_radius,
+                height = height,
+                overlap_clearance = overlap_clearance,
+                height_clearance = height_clearance
                 );
             }
         }
@@ -389,15 +389,15 @@ bottom_height_val = bottom_height
 ) {
     // Top section components
     translate([0, 0, bottom_height_val]) {
-        // Upper tabs at top radius
-        upper_tabs();
-
         // Top cylinder
         color("green")
             top_part();
 
         // Shoulder transition
         shoulder_part();
+        
+        // Upper ring around the top cylinder
+        upper_ring();
     }
 
     // Middle section - threaded tabs
@@ -407,7 +407,6 @@ bottom_height_val = bottom_height
 
     // Bottom section components
     bottom_parts();
-
 }
 
 
