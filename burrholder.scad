@@ -25,6 +25,9 @@ rubber_tab_width = 2;
 rubber_tab_height = 3;  // Added to shoulder_height
 rubber_tab_angles = [45, 225];  // Angles around the circle where tabs are placed
 
+// Parameters for retainer tabs
+retainer_tab_contenance = 4.5; // Millstone has a 4mm lip, so .5 margin
+
 // Heights - Sections
 top_rings_height = 5;
 shoulder_height = 3;
@@ -145,7 +148,6 @@ outer_radius = top_ring2_outer_radius  // Same as shoulder outer_radius default
 // @todo to refactor, using common variables, etc
 module shoulder(
 height = shoulder_height,
-//extension = shoulder_extension,
 inner_radius = top_ring1_inner_radius,
 outer_radius = bottom_radius
 ) {
@@ -187,9 +189,7 @@ start_angle,
 end_angle,
 outer_radius = bottom_radius,
 inner_radius = bottom_internal_radius,
-height,
-overlap_clearance = 0,
-height_clearance = 0
+height
 ) {
     angle_span = end_angle - start_angle;
 
@@ -206,7 +206,6 @@ angle_width = 60, // Angular width of the segment
 outer_radius = bottom_radius,
 inner_radius = bottom_internal_radius,
 height = bottom_height,
-tab_height = bottom_height - shoulder_extension - 4.5,
 overlap_clearance = 0.05,
 height_clearance = 0.1
 ) {
@@ -222,9 +221,7 @@ height_clearance = 0.1
         end_angle = end_angle,
         outer_radius = outer_radius,
         inner_radius = inner_radius,
-        height = height,
-        overlap_clearance = overlap_clearance,
-        height_clearance = height_clearance
+        height = height
         );
 
         millstone_single_holder();
@@ -235,7 +232,7 @@ height_clearance = 0.1
 module millstone_retainer_tab_segment(
 angle_width,
 height = bottom_height,
-z_position = bottom_height - shoulder_extension - 4.5,
+z_position = bottom_height - retainer_tab_contenance,
 tab_width = 7.5,
 tab_depth = 1.5,
 outer_radius = bottom_radius,
@@ -270,7 +267,7 @@ width,
 depth,
 height,
 ) {
-    rotate([90, 0, 0])
+    rotate([-90, 0, 0])
         linear_extrude(width, center = true)
             polygon(points = [[0, 0], [depth, 0], [0, height]]);
 }
