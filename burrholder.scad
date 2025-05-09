@@ -15,14 +15,19 @@ bottom_internal_radius = bottom_radius - bottom_thickness;
 
 // Parameters for upper ring
 top_ring1_outer_radius = 22;
-top_ring1_inner_radius = 20;
-top_ring_spacing = 2;    // Spacing between ring 1 and 2
+top_ring1_inner_radius = 18;
+top_rings_spacing = 2;    // Spacing between ring 1 and 2
 top_ring2_outer_radius = bottom_radius + 2;
-upper_ring_height = 8;            // Height of the vertical ring
+
+
+// Parameters for upper tabs
+rubber_tab_width = 2;
+rubber_tab_height = 3;  // Added to shoulder_height
+upper_tab_angles = [45, 225];  // Angles around the circle where tabs are placed
 
 // Heights - Sections
-top_rings_height = 6;
-shoulder_height = 2;
+top_rings_height = 5;
+shoulder_height = 3;
 bottom_height = 11;
 shoulder_extension = 1.5;
 
@@ -36,27 +41,33 @@ module prism(l, w, h) {
     faces = [[0, 1, 2, 3], [5, 4, 3, 2], [0, 4, 5, 1], [0, 3, 4], [5, 2, 1]]);
 }
 
-// Parameters for upper tabs
-upper_tab_width = 4.4;
-upper_tab_base_spacing = 1.6;
-upper_tab_thickness = 1.6;
-upper_tab_connector_width = 2;
-upper_tab_connector_height_extension = 2;  // Added to shoulder_height
-upper_tab_angles = [45, 225];  // Angles around the circle where tabs are placed
 
 // Create a beveled cylinder - generic function
 // h = height, or = outer radius, ir = inner radius, tb = top bevel width, bb = bottom bevel width
 module beveled_tube(h, or, ir, tb = 0, bb = 0) {
+    assert(or >= ir, "Inner radius must be less than outer radius");
+    assert(h >= tb + bb, str("Height (", h, ") must be greater than top plus bottom bevels", [tb, bb]));
+    echo("Beveled tube: ", [h, or, ir, tb, bb]);
+    thickness = or - ir;
+    if (tb > thickness) {
+        tb = thickness;
+    }
+    if (bb > thickness) {
+        bb = thickness;
+    }
     union() {
-        translate([0, 0, bb])
-            tube(h = h - tb - bb, or = or, ir = ir, center = false);
+        if (h > bb + tb)
+            translate([0, 0, bb])
+                tube(h = h - tb - bb, or = or, ir = ir, center = false);
         if (tb > 0)
             translate([0, 0, h - tb])
                 tube(h = tb, or1 = or, or2 = or - tb, ir = ir, center = false);
-        if (bb > 0)
-        tube(h = bb, or1 = or - bb, or2 = or, ir = ir, center = false);
+        if (bb > 0) {
+            tube(h = bb, or1 = or - bb, or2 = or, ir = ir, center = false);
+        }
     }
 }
+
 
 //     if (b < 0) {
 //        // Create a cylinder with a beveled bottom
@@ -75,35 +86,38 @@ module beveled_tube(h, or, ir, tb = 0, bb = 0) {
 //        }
 //    }
 
+// Stable tube/ring module using only core OpenSCAD functions
+// Parameters:
+// h = height of the tube
+// or1 = outer radius at bottom
+// or2 = outer radius at top (defaults to or1 if not specified)
+// ir1 = inner radius at bottom
+// ir2 = inner radius at top (defaults to ir1 if not specified)
+// fn = optional fragment number (resolution)
+module stable_tube(h, or1, ir1, or2 = undef, ir2 = undef, fn = $fn) {
+    // Default values for optional parameters
+    or2_actual = (or2 == undef) ? or1 : or2;
+    ir2_actual = (ir2 == undef) ? ir1 : ir2;
 
-// Apply clearance with separate x, y, z scaling factors using multmatrix
-// All scaling happens from the center of the object
-//module apply_clearance(factors = [1.01, 1.01, 1.01]) {
-//// Extract scaling factors
-//x_factor = factors[0];
-//y_factor = factors[1];
-//z_factor = factors[2];
-//
-//// Calculate offsets to ensure scaling from center
-//// For each dimension, offset = -(scale_factor - 1)/2
-//x_offset = - (x_factor - 1) / 2;
-//y_offset = - (y_factor - 1) / 2;
-//z_offset = - (z_factor - 1) / 2;
-//
-//// Apply transformation matrix
-//// Structure: [scale_x, 0, 0, offset_x]
-////            [0, scale_y, 0, offset_y]
-////            [0, 0, scale_z, offset_z]
-////            [0, 0, 0, 1]
-//multmatrix([
-//[x_factor, 0, 0, x_offset],
-//[0, y_factor, 0, y_offset],
-//[0, 0, z_factor, z_offset],
-//[0, 0, 0, 1]
-//]) {
-//children();
-//}
-//}
+    // Input validation
+    assert(h > 0, str("Height must be positive: ", h));
+    assert(or1 > ir1, "Outer radius must be greater than inner radius at bottom");
+    assert(or2_actual > ir2_actual, "Outer radius must be greater than inner radius at top");
+
+    // Create a 2D profile and rotate it around the Z axis
+    rotate_extrude(angle = 360, $fn = fn) {
+        polygon(
+        points = [
+                [ir1, 0], // Bottom inner
+                [or1, 0], // Bottom outer
+                [or2_actual, h], // Top outer
+                [ir2_actual, h]    // Top inner
+            ],
+        // Define the face as a simple quad
+        paths = [[0, 1, 2, 3]]
+        );
+    }
+}
 
 module apply_z_cutout_clearance(z_clearance, height) {
     rescale_centered([1, 1, 1 + z_clearance]){
@@ -115,7 +129,7 @@ module apply_z_cutout_clearance(z_clearance, height) {
 module top_ring1(
 outer_radius = top_ring1_outer_radius,
 inner_radius = top_ring1_inner_radius,
-height = shoulder_height + top_rings_height
+height = top_rings_height
 ) {
     tube(h = height, or = outer_radius, ir = inner_radius, center = false);
 }
@@ -123,12 +137,12 @@ height = shoulder_height + top_rings_height
 // Create a continuous vertical ring around the top cylinder with connectors
 // @todo sort out the refrernfce to inner ring in spacing and thickness
 module top_ring2(
-height = upper_ring_height,
-base_spacing = top_ring_spacing, // should be refreing to connector origin
+height = top_rings_height,
+base_spacing = top_rings_spacing, // should be refreing to connector origin
 connector_positions = upper_tab_angles,
-connector_width = upper_tab_connector_width,
-connector_height = upper_tab_connector_height_extension + shoulder_height,
-outer_radius = top_ring2_outer_radius  // Same as shoulder_transition outer_radius default
+connector_width = rubber_tab_width,
+connector_height = rubber_tab_height,
+outer_radius = top_ring2_outer_radius  // Same as shoulder outer_radius default
 ) {
     inner_radius = base_spacing + top_ring1_outer_radius;
     thickness = outer_radius - inner_radius;
@@ -169,21 +183,17 @@ outer_radius = top_ring2_outer_radius  // Same as shoulder_transition outer_radi
 
 // Create the shoulder transition part with reinforcement
 // @todo to refactor, using common variables, etc
-module shoulder_transition(
+module shoulder(
 height = shoulder_height,
-extension = shoulder_extension,
+//extension = shoulder_extension,
 inner_radius = top_ring1_inner_radius,
-outer_radius = top_ring1_outer_radius + top_ring_spacing
+outer_radius = bottom_radius
 ) {
-    difference() {
-        tube(ir = inner_radius, or = outer_radius, h = height, center = false);
-        //        beveled_tube(h = height, or = outer_radius, ir = inner_radius, tb = outer_radius - inner_radius);
-    }
-}
-
-// Legacy function for backward compatibility
-module shoulder_part() {
-    shoulder_transition();
+    bevel = top_rings_spacing;
+    tube(h = height, or = outer_radius, ir = inner_radius, center = false);
+//    translate([0, 0, height])
+//        tube(h = bevel, or = top_ring1_outer_radius + bevel, ir1 = top_ring1_outer_radius, ir2 =
+//            top_ring1_outer_radius + bevel, center = false);
 }
 
 // Parameters for middle tab thread
@@ -445,17 +455,20 @@ tabs_position = middle_tabs_position,
     // @todo refactor this structure
     // Top section components
     translate([0, 0, bottom_height]) {
-        // Top cylinder
-        color("green")
-            top_ring1();
 
         // Shoulder transition
         color("blue")
-            shoulder_part();
+            shoulder( shoulder = shoulder_height);
 
+    }
+
+    translate([0, 0, bottom_height + shoulder_height]) {
+        // Top cylinder
+        color("green")
+            top_ring1();
         // Upper ring around the top cylinder
-        color("red")
-            top_ring2();
+        //        color("red")
+        //            top_ring2();
     }
 
     // Middle section - threaded tabs
