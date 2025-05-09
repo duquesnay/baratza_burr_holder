@@ -176,7 +176,8 @@ module tightening_thread() {
     thread_depth = thread_depth, // how deep the thread goes, max 2 probably
 //    thread_angle = 0, // Square thread profile for precision fit
     left_handed = true,
-    lead_in1 = 2                 // Standard lead-in
+    lead_in1 = 2, // Standard lead-in
+    anchor = BOTTOM
     );
 }
 
