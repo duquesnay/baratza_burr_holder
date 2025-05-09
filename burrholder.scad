@@ -17,7 +17,7 @@ bottom_internal_radius = bottom_radius - bottom_thickness;
 top_ring1_outer_radius = 22;
 top_ring1_inner_radius = 20;
 top_ring_spacing = 2;    // Spacing between ring 1 and 2
-top_ring2_outer_radius = bottom_radius;
+top_ring2_outer_radius = bottom_radius + 2;
 upper_ring_height = 8;            // Height of the vertical ring
 
 // Heights - Sections
@@ -132,16 +132,26 @@ outer_radius = top_ring2_outer_radius  // Same as shoulder_transition outer_radi
 ) {
     inner_radius = base_spacing + top_ring1_outer_radius;
     thickness = outer_radius - inner_radius;
-    outer_radius = outer_radius + 2;
+    outer_radius = outer_radius; // making it thicker to compensate
     bb = outer_radius - bottom_radius; // just in case we decide to over over large
 
-    beveled_tube(
-    h = height,
-    or = outer_radius,
-    ir = inner_radius,
-    tb = 0,
-    bb = bb
-    );
+    difference() {
+
+        beveled_tube(
+        h = height,
+        or = outer_radius,
+        ir = inner_radius,
+        tb = 0,
+        bb = bb
+        );
+
+        count = 8;
+        for (i = [0:count - 1])
+        rotate([0, 0, i * (360 / count)])
+            translate([outer_radius + 4, 0, 0])
+                cylinder(r = 6, h = height);
+
+    }
 
 
 
@@ -150,8 +160,9 @@ outer_radius = top_ring2_outer_radius  // Same as shoulder_transition outer_radi
     // with the original connector height
     for (angle = connector_positions) {
         rotate([0, 0, angle])
-            translate([-connector_width / 2, inner_radius, 0])
-                cube([connector_width, base_spacing, connector_height]);
+            translate([-connector_width / 2, top_ring1_inner_radius, 0])
+                cube([connector_width, top_ring1_outer_radius - top_ring1_inner_radius + base_spacing, connector_height]
+                );
     }
 
 }
@@ -165,8 +176,8 @@ inner_radius = top_ring1_inner_radius,
 outer_radius = top_ring1_outer_radius + top_ring_spacing
 ) {
     difference() {
-                tube(ir = inner_radius, or = outer_radius, h = height, center = false);
-//        beveled_tube(h = height, or = outer_radius, ir = inner_radius, tb = outer_radius - inner_radius);
+        tube(ir = inner_radius, or = outer_radius, h = height, center = false);
+        //        beveled_tube(h = height, or = outer_radius, ir = inner_radius, tb = outer_radius - inner_radius);
     }
 }
 
