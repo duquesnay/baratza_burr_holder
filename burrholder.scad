@@ -14,9 +14,9 @@ bottom_internal_radius = bottom_radius - bottom_thickness;
 
 
 // Parameters for upper ring
-top_ring1_outer_radius = 22;
+top_ring1_outer_radius = 21;
 top_ring1_inner_radius = 18;
-top_rings_spacing = 2;    // Spacing between ring 1 and 2
+top_rings_spacing = 2.5;    // Spacing between ring 1 and 2
 top_ring2_outer_radius = bottom_radius + 2;
 
 
