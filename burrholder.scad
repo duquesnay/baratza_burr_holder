@@ -14,11 +14,11 @@ bottom_internal_radius = bottom_radius - bottom_thickness;
 
 
 // Parameters for upper ring
-top_ring1_outer_radius = 22.5;
+top_ring1_outer_radius = 22;
 top_ring1_inner_radius = 20;
+top_ring_spacing = 2;    // Spacing between ring 1 and 2
 top_ring2_outer_radius = bottom_radius;
 upper_ring_height = 8;            // Height of the vertical ring
-top_ring_spacing = 2;    // Spacing between body and ring
 
 // Heights - Sections
 top_rings_height = 6;
@@ -44,38 +44,106 @@ upper_tab_connector_width = 2;
 upper_tab_connector_height_extension = 2;  // Added to shoulder_height
 upper_tab_angles = [45, 225];  // Angles around the circle where tabs are placed
 
+// Create a beveled cylinder - generic function
+// h = height, or = outer radius, ir = inner radius, tb = top bevel width, bb = bottom bevel width
+module beveled_tube(h, or, ir, tb = 0, bb = 0) {
+    union() {
+        translate([0, 0, bb])
+            tube(h = h - tb - bb, or = or, ir = ir, center = false);
+        if (tb > 0)
+            translate([0, 0, h - tb])
+                tube(h = tb, or1 = or, or2 = or - tb, ir = ir, center = false);
+        if (bb > 0)
+        tube(h = bb, or1 = or - bb, or2 = or, ir = ir, center = false);
+    }
+}
+
+//     if (b < 0) {
+//        // Create a cylinder with a beveled bottom
+//        b = -b;
+//        union() {
+//            translate([0, 0, b])
+//                cylinder(h = h - b, r = r);
+//            cylinder(h = b, r1 = r - b, r2 = r);
+//        }
+//    } else {
+//        // Create a cylinder with bevel top
+//        union() {
+//            cylinder(h = h - b, r = r);
+//            translate([0, 0, h - b])
+//                cylinder(h = b, r1 = r, r2 = r - b);
+//        }
+//    }
+
+
+// Apply clearance with separate x, y, z scaling factors using multmatrix
+// All scaling happens from the center of the object
+//module apply_clearance(factors = [1.01, 1.01, 1.01]) {
+//// Extract scaling factors
+//x_factor = factors[0];
+//y_factor = factors[1];
+//z_factor = factors[2];
+//
+//// Calculate offsets to ensure scaling from center
+//// For each dimension, offset = -(scale_factor - 1)/2
+//x_offset = - (x_factor - 1) / 2;
+//y_offset = - (y_factor - 1) / 2;
+//z_offset = - (z_factor - 1) / 2;
+//
+//// Apply transformation matrix
+//// Structure: [scale_x, 0, 0, offset_x]
+////            [0, scale_y, 0, offset_y]
+////            [0, 0, scale_z, offset_z]
+////            [0, 0, 0, 1]
+//multmatrix([
+//[x_factor, 0, 0, x_offset],
+//[0, y_factor, 0, y_offset],
+//[0, 0, z_factor, z_offset],
+//[0, 0, 0, 1]
+//]) {
+//children();
+//}
+//}
+
+module apply_z_cutout_clearance(z_clearance, height) {
+    rescale_centered([1, 1, 1 + z_clearance]){
+        children();
+    }
+}
+
+// Create the hollow top cylinder
+module top_ring1(
+outer_radius = top_ring1_outer_radius,
+inner_radius = top_ring1_inner_radius,
+height = shoulder_height + top_rings_height
+) {
+    tube(h = height, or = outer_radius, ir = inner_radius, center = false);
+}
+
 // Create a continuous vertical ring around the top cylinder with connectors
+// @todo sort out the refrernfce to inner ring in spacing and thickness
 module top_ring2(
 height = upper_ring_height,
-base_spacing = top_ring_spacing,
+base_spacing = top_ring_spacing, // should be refreing to connector origin
 connector_positions = upper_tab_angles,
 connector_width = upper_tab_connector_width,
 connector_height = upper_tab_connector_height_extension + shoulder_height,
-thickness,
 outer_radius = top_ring2_outer_radius  // Same as shoulder_transition outer_radius default
 ) {
     inner_radius = base_spacing + top_ring1_outer_radius;
     thickness = outer_radius - inner_radius;
+    outer_radius = outer_radius + 2;
+    bb = outer_radius - bottom_radius; // just in case we decide to over over large
 
-    cutout_clearance = 0.01; // percentage
+    beveled_tube(
+    h = height,
+    or = outer_radius,
+    ir = inner_radius,
+    tb = 0,
+    bb = bb
+    );
 
-    union() {
-        difference() {
-            // Main ring - same outer radius as the shoulder
-            union() {
-                beveled_cylinder(r = outer_radius, b = thickness, h = height);
-            }
-            //                translate([0, 0, -ring_thickness])
-            apply_z_cutout_clearance(cutout_clearance, height);
-            cylinder(r = inner_radius, h = height);
-        }
-    }
 
-    module apply_z_cutout_clearance(z_clearance, height) {
-        scale([1, 1, 1 + 2 * z_clearance])
-            translate([0, 0, -height * cutout_clearance])
-                cylinder(r = inner_radius, h = height);
-    }
 
 
     // Add connectors at exactly the same positions as the original tabs
@@ -88,71 +156,18 @@ outer_radius = top_ring2_outer_radius  // Same as shoulder_transition outer_radi
 
 }
 
-// Create a beveled cylinder for the ring
-// This is a simplified version of the original beveled cylinder
-// r is the outer radius, h is the height, and b is the bevel thickness
-module beveled_cylinder(r, h, b) {
-    if (b < 0) {
-        // Create a cylinder with a beveled bottom
-        b = -b;
-        union() {
-            translate([0, 0, b])
-                cylinder(h = h - b, r = r);
-            cylinder(h = b, r1 = r - b, r2 = r);
-        }
-    } else {
-        // Create a cylinder with bevel top
-        union() {
-            cylinder(h = h - b, r = r);
-            translate([0, 0, h - b])
-                cylinder(h = b, r1 = r, r2 = r - b);
-        }
-    }
-}
-
-
-// Create the hollow top cylinder
-module top_ring1(
-outer_radius = top_ring1_outer_radius,
-inner_radius = top_ring1_inner_radius,
-height = shoulder_height + top_rings_height
-) {
-    overlap_clearance = 0.05;
-    height_clearance = 0.1;
-    difference() {
-        // Outer cylinder
-        cylinder(r = outer_radius, h = height);
-
-        // Inner hollow (with clearance for clean difference operation)
-        translate([0, 0, -overlap_clearance])
-            cylinder(r = inner_radius, h = height + height_clearance);
-    }
-}
-
 // Create the shoulder transition part with reinforcement
 // @todo to refactor, using common variables, etc
 module shoulder_transition(
-outer_radius = 25.8,
-outer_radius_val = top_ring1_outer_radius,
-bevel_thickness = 1,
 height = shoulder_height,
 extension = shoulder_extension,
-inner_radius = bottom_internal_radius,
-overlap_clearance = 0.05
+inner_radius = top_ring1_inner_radius,
+outer_radius = top_ring1_outer_radius + top_ring_spacing
 ) {
-    height_clearance = 0.1;
-    radius_clearance = 0.1;
-    bevel_radius = outer_radius;
-    // Main shoulder transition (conical ring)
     difference() {
-        // Outer tapered cylinder
-        cylinder(r2 = outer_radius, r1 = outer_radius_val, h = height);
-
-        // Inner cutout to create ring
-        translate([0, 0, -overlap_clearance])
-            cylinder(r = outer_radius_val, h = height + height_clearance);
+                tube(ir = inner_radius, or = outer_radius, h = height, center = false);
+//        beveled_tube(h = height, or = outer_radius, ir = inner_radius, tb = outer_radius - inner_radius);
     }
-
 }
 
 // Legacy function for backward compatibility
@@ -415,11 +430,10 @@ middle_tabs_position = 5.5;
 // Assemble the complete body from all components
 module body(
 tabs_position = middle_tabs_position,
-bottom_height_val = bottom_height
 ) {
     // @todo refactor this structure
     // Top section components
-    translate([0, 0, bottom_height_val]) {
+    translate([0, 0, bottom_height]) {
         // Top cylinder
         color("green")
             top_ring1();
