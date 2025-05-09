@@ -9,22 +9,25 @@ $fs = 0.4;
 // Dimensions - Main structure
 outer_diameter = 51.6; // [51:0.05:53]
 bottom_radius = outer_diameter / 2;
-top_radius = 22.5;
 bottom_thickness = 1.7; // [1:0.1:2]
 bottom_internal_radius = bottom_radius - bottom_thickness;
 
+
+// Parameters for upper ring
+top_ring1_outer_radius = 22.5;
+top_ring1_inner_radius = 20;
+top_ring2_outer_radius = bottom_radius;
+upper_ring_height = 8;            // Height of the vertical ring
+top_ring_spacing = 2;    // Spacing between body and ring
+
 // Heights - Sections
-top_height = 6;
+top_rings_height = 6;
 shoulder_height = 2;
 bottom_height = 11;
 shoulder_extension = 1.5;
 
 // Tabs - Dimensions
 side_holder_length = 1.2; // [1:0.1:2]
-
-
-// Configuration options
-debug_visualize_cutouts = 0; // [0, 1] - Set to 1 to see colored cutout shapes
 
 // https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Primitive_Solids
 module prism(l, w, h) {
@@ -39,90 +42,50 @@ upper_tab_base_spacing = 1.6;
 upper_tab_thickness = 1.6;
 upper_tab_connector_width = 2;
 upper_tab_connector_height_extension = 2;  // Added to shoulder_height
-upper_tab_positions = [45, 225];  // Angles around the circle where tabs are placed
-
-// Create a single tab with specified parameters - simplified straight design
-module create_tab(
-width = 4,
-total_height = shoulder_height + top_height,
-base_spacing = upper_tab_base_spacing,
-thickness = upper_tab_thickness,
-connector_width = upper_tab_connector_width,
-connector_height = upper_tab_connector_height_extension + shoulder_height
-) {
-    // Create a simplified straight tab without angled top
-    union() {
-        // Connector to the main body - wider base for stability
-        translate([-connector_width / 2, 0, 0])
-            cube([connector_width, base_spacing, connector_height]);
-
-        // Main tab body - straight vertical tab
-        translate([-width / 2, base_spacing, 0])
-            cube([width, thickness, total_height]);
-    }
-}
-
-// Create all upper tabs at their designated positions
-module upper_tabs(
-tab_width = upper_tab_width,
-tab_positions = upper_tab_positions,
-radius = top_radius
-) {
-    for (angle = tab_positions) {
-        rotate([0, 0, angle])
-            translate([0, radius, 0])
-                color("red") create_tab(width = tab_width);
-    }
-}
-
-// Parameters for upper ring
-upper_ring_height = 8;            // Height of the vertical ring
-upper_ring_base_spacing = 2;    // Spacing between body and ring
+upper_tab_angles = [45, 225];  // Angles around the circle where tabs are placed
 
 // Create a continuous vertical ring around the top cylinder with connectors
-module upper_ring(
+module top_ring2(
 height = upper_ring_height,
-base_spacing = upper_ring_base_spacing,
-connector_positions = upper_tab_positions,
+base_spacing = top_ring_spacing,
+connector_positions = upper_tab_angles,
 connector_width = upper_tab_connector_width,
 connector_height = upper_tab_connector_height_extension + shoulder_height,
-outer_radius = 27.8  // Same as shoulder_transition outer_radius default
+thickness,
+outer_radius = top_ring2_outer_radius  // Same as shoulder_transition outer_radius default
 ) {
-    inner_radius = top_radius;
-    outer_inner_radius = top_radius + base_spacing;
+    inner_radius = base_spacing + top_ring1_outer_radius;
+    thickness = outer_radius - inner_radius;
 
-    ring_thickness = 2;
-    color("red")
-        union() {
-            difference() {
-                // Main ring - same outer radius as the shoulder
-                union() {
-                    // Outer cylinder for the ring
+    cutout_clearance = 0.01; // percentage
 
-                    //                        cylinder(r = outer_radius, h = height - ring_thickness);
-                    // Inner cutout to create the ring
-                    //                translate([0, 0, -ring_thickness])
-                    beveled_cylinder(r = outer_radius, b = -ring_thickness, h = height);
-                }
-                //                translate([0, 0, -ring_thickness])
-                translate([0, 0, -0.1])
-                    union() {
-                        translate([0, 0, ring_thickness])
-                            cylinder(r = outer_inner_radius, h = height - ring_thickness + 0.2);
-                        // Inner cutout to create the ring
-                        cylinder(r = outer_inner_radius, h = ring_thickness + 0.2);
-                    }
+    union() {
+        difference() {
+            // Main ring - same outer radius as the shoulder
+            union() {
+                beveled_cylinder(r = outer_radius, b = thickness, h = height);
             }
-
-
-            // Add connectors at exactly the same positions as the original tabs
-            // with the original connector height
-            for (angle = connector_positions) {
-                rotate([0, 0, angle])
-                    translate([-connector_width / 2, inner_radius, 0])
-                        cube([connector_width, base_spacing, connector_height]);
-            }
+            //                translate([0, 0, -ring_thickness])
+            apply_z_cutout_clearance(cutout_clearance, height);
+            cylinder(r = inner_radius, h = height);
         }
+    }
+
+    module apply_z_cutout_clearance(z_clearance, height) {
+        scale([1, 1, 1 + 2 * z_clearance])
+            translate([0, 0, -height * cutout_clearance])
+                cylinder(r = inner_radius, h = height);
+    }
+
+
+    // Add connectors at exactly the same positions as the original tabs
+    // with the original connector height
+    for (angle = connector_positions) {
+        rotate([0, 0, angle])
+            translate([-connector_width / 2, inner_radius, 0])
+                cube([connector_width, base_spacing, connector_height]);
+    }
+
 }
 
 // Create a beveled cylinder for the ring
@@ -149,13 +112,13 @@ module beveled_cylinder(r, h, b) {
 
 
 // Create the hollow top cylinder
-module top_cylinder(
-outer_radius = top_radius,
-height = shoulder_height + top_height,
-inner_radius = 20,
-overlap_clearance = 0.05,
-height_clearance = 0.1
+module top_ring1(
+outer_radius = top_ring1_outer_radius,
+inner_radius = top_ring1_inner_radius,
+height = shoulder_height + top_rings_height
 ) {
+    overlap_clearance = 0.05;
+    height_clearance = 0.1;
     difference() {
         // Outer cylinder
         cylinder(r = outer_radius, h = height);
@@ -166,32 +129,28 @@ height_clearance = 0.1
     }
 }
 
-// Legacy function for backward compatibility
-module top_part() {
-    top_cylinder();
-}
-
 // Create the shoulder transition part with reinforcement
+// @todo to refactor, using common variables, etc
 module shoulder_transition(
 outer_radius = 25.8,
-top_radius_val = top_radius,
+outer_radius_val = top_ring1_outer_radius,
 bevel_thickness = 1,
 height = shoulder_height,
 extension = shoulder_extension,
 inner_radius = bottom_internal_radius,
-overlap_clearance = 0.05,
-height_clearance = 0.1,
-radius_clearance = 0.1
+overlap_clearance = 0.05
 ) {
+    height_clearance = 0.1;
+    radius_clearance = 0.1;
     bevel_radius = outer_radius;
     // Main shoulder transition (conical ring)
-    color("blue") difference() {
+    difference() {
         // Outer tapered cylinder
-        cylinder(r2 = outer_radius, r1 = top_radius_val, h = height);
+        cylinder(r2 = outer_radius, r1 = outer_radius_val, h = height);
 
         // Inner cutout to create ring
         translate([0, 0, -overlap_clearance])
-            cylinder(r = top_radius_val, h = height + height_clearance);
+            cylinder(r = outer_radius_val, h = height + height_clearance);
     }
 
 }
@@ -220,21 +179,21 @@ module create_middle_tab() {
     tab_width = 40;
     middle_tab_height = 0.8; // [0.5:0.1:2]
     tab_half_width = tab_width / 2;
-    
+
     // Use standard thread parameters that are known to work well
     pitch = 2;
     thread_depth = 1.5;      // Standard depth for reliable threading
-    
+
     // Use the default thread profile which renders reliably
     thread_helix(
-        turns = 0.3,                 // Standard turns value
-        d = (bottom_radius) * 2,     // Outer diameter
-        pitch = pitch,               // Distance between complete turns
-        starts = 3,                  // Triple-start thread
-        thread_depth = thread_depth, // Use depth parameter directly
-        thread_angle = 0,            // Square thread profile for precision fit
-        left_handed = true,
-        lead_in1 = 2                 // Standard lead-in
+    turns = 0.3, // Standard turns value
+    d = (bottom_radius) * 2, // Outer diameter
+    pitch = pitch, // Distance between complete turns
+    starts = 3, // Triple-start thread
+    thread_depth = thread_depth, // Use depth parameter directly
+    thread_angle = 0, // Square thread profile for precision fit
+    left_handed = true,
+    lead_in1 = 2                 // Standard lead-in
     );
 }
 
@@ -458,17 +417,20 @@ module body(
 tabs_position = middle_tabs_position,
 bottom_height_val = bottom_height
 ) {
+    // @todo refactor this structure
     // Top section components
     translate([0, 0, bottom_height_val]) {
         // Top cylinder
         color("green")
-            top_part();
+            top_ring1();
 
         // Shoulder transition
-        shoulder_part();
+        color("blue")
+            shoulder_part();
 
         // Upper ring around the top cylinder
-        upper_ring();
+        color("red")
+            top_ring2();
     }
 
     // Middle section - threaded tabs
