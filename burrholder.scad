@@ -101,12 +101,6 @@ module stable_tube(h, or1, ir1, or2 = undef, ir2 = undef, fn = $fn) {
     }
 }
 
-module apply_z_cutout_clearance(z_clearance, height) {
-    rescale_centered([1, 1, 1 + z_clearance]){
-        children();
-    }
-}
-
 // Create the hollow top cylinder
 module top_ring1(
 outer_radius = top_ring1_outer_radius,
@@ -117,7 +111,6 @@ height = top_rings_height
 }
 
 // Create a continuous vertical ring around the top cylinder with connectors
-// @todo sort out the refrernfce to inner ring in spacing and thickness
 module top_ring2(
 height = top_rings_height,
 base_spacing = top_rings_spacing, // should be refreing to connector origin
@@ -164,44 +157,28 @@ outer_radius = bottom_radius
 middle_tab_pitch = 2;
 middle_tab_thread_width = 0.8;  // Make thread thinner (1mm in total width)
 middle_tab_thread_depth = 2;    // Make thread thinner (1mm in total width)
-middle_tab_external_ridge_height = 0.3;
-middle_tab_shoulder_overhang_depth = 0.6;
 middle_tab_turns = 0.3;
 middle_tab_starts = 3;
 middle_tab_lead_in = 2;
 middle_tab_left_handed = true;
+thread_depth = 1.5;      // Standard depth for reliable threading
 
 // Middle tab with helix angle for threading onto the grinder
-module create_middle_tab() {
-    // Tab dimensions
-    tab_position = bottom_radius - 4.5;
-    tab_radius_extension = 6.5;
-    tab_width = 40;
-    middle_tab_height = 0.8; // [0.5:0.1:2]
-    tab_half_width = tab_width / 2;
-
+module tightening_thread() {
     // Use standard thread parameters that are known to work well
-    pitch = 2;
-    thread_depth = 1.5;      // Standard depth for reliable threading
 
     // Use the default thread profile which renders reliably
     thread_helix(
-    turns = 0.3, // Standard turns value
+    turns = middle_tab_turns, // Standard turns value
     d = (bottom_radius) * 2, // Outer diameter
-    pitch = pitch, // Distance between complete turns
+    pitch = 2, // Distance between complete turns, fixed
     starts = 3, // Triple-start thread
-    thread_depth = thread_depth, // Use depth parameter directly
-    thread_angle = 0, // Square thread profile for precision fit
+    thread_depth = thread_depth, // how deep the thread goes, max 2 probably
+//    thread_angle = 0, // Square thread profile for precision fit
     left_handed = true,
     lead_in1 = 2                 // Standard lead-in
     );
 }
-
-// Wrapper function for backward compatibility - uses default parameters
-module middle_tabs() {
-    create_middle_tab();
-}
-
 
 // Create a segment of the hollow bottom cylinder
 module bottom_cylinder_segment(
@@ -410,12 +387,10 @@ prism_z_level = 6
 }
 
 // Position parameters for main components
-middle_tabs_position = 5.5;
+threads_z_position = 5.5;
 
 // Assemble the complete body from all components
-module body(
-tabs_position = middle_tabs_position,
-) {
+module body() {
     // @todo refactor this structure
     // Top section components
     translate([0, 0, bottom_height]) {
@@ -457,8 +432,8 @@ tabs_position = middle_tabs_position,
 
     // Middle section - threaded tabs
     color("yellow")
-        translate([0, 0, tabs_position])
-            middle_tabs();
+        translate([0, 0, threads_z_position])
+            tightening_thread();
 
     // Bottom section components
     bottom_parts();
