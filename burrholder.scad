@@ -243,16 +243,6 @@ module middle_tabs() {
     create_middle_tab();
 }
 
-// Create a single millstone tab
-module create_millstone_tab(
-width,
-depth,
-length,
-) {
-    translate([-width / 2, 0, 0])
-        rotate([90, 0, 0])
-            prism(width, depth, length);
-}
 
 // Create a segment of the hollow bottom cylinder
 module bottom_cylinder_segment(
@@ -260,7 +250,7 @@ start_angle,
 end_angle,
 outer_radius = bottom_radius,
 inner_radius = bottom_internal_radius,
-height = bottom_height,
+height,
 overlap_clearance = 0,
 height_clearance = 0
 ) {
@@ -308,53 +298,44 @@ height_clearance = 0.1
 module millstone_retainer_tab_segment(
 angle_width,
 height = bottom_height,
-tab_height = bottom_height - shoulder_extension - 4.5,
+z_position = bottom_height - shoulder_extension - 4.5,
 tab_width = 7.5,
 tab_depth = 1.5,
 outer_radius = bottom_radius,
 inner_radius = bottom_internal_radius,
 tab_length = side_holder_length,
-closed_gap_width = 0.75,
+slit_width = 1,
 ) {
-    // Calculate the start and end angles to center the tab
-    // No need for a vertical slit anymore since we'll use horizontal slots
-    start_angle = -angle_width / 2;
-    end_angle = angle_width / 2;
+    // Calculate the start and end angles to center the tab with a negative margin to create slits
+    end_angle = angle_width / 2 - slit_width;
+    start_angle = -end_angle;
 
-    difference() {
-        union() {
-            // Create the complete cylinder segment (no vertical slit)
-            bottom_cylinder_segment(
-            start_angle = start_angle,
-            end_angle = end_angle,
-            height = height
-            );
+    union() {
+        // Create the complete cylinder segment
+        bottom_cylinder_segment(
+        start_angle = start_angle,
+        end_angle = end_angle,
+        height = height
+        );
 
-            // Add the millstone tab - rotated to align perpendicular to the cylinder radius
-            // The -90° rotation positions the tab at right angles to the segment's central angle
-            rotate([0, 0, -90])
-                translate([0, inner_radius, tab_height])
-                    create_millstone_tab(tab_width, tab_depth, tab_length);
-        }
-
-        // Add horizontal flexibility slots instead of vertical slits
-        // These will follow the print layers for better strength
-        slot_height = 0.75;                      // Height of the slots
-        slot_depth = outer_radius - inner_radius + 0.2; // Wall thickness plus overlap
-        
-        // Offset distance from tab center
-        slot_offset = 2;                         // Distance from tab in mm
-        
-        // First slot - above the tab
-        translate([0, -angle_width/5, tab_height + slot_offset])
-            rotate([0, 0, 0])
-                cube([slot_depth, angle_width/2.5, slot_height]);
-                
-        // Second slot - below the tab
-        translate([0, -angle_width/5, tab_height - slot_offset - slot_height])
-            rotate([0, 0, 0])
-                cube([slot_depth, angle_width/2.5, slot_height]);
+        // Add the millstone tab - rotated to align perpendicular to the cylinder radius
+        // The -90° rotation positions the tab at right angles to the segment's central angle
+        translate([inner_radius, 0, z_position])
+            rotate([0, 0, 180])
+                //            translate([ inner_radius, 0, z_position])
+                retainer_tab(tab_width, tab_depth, tab_length);
     }
+}
+
+// Create a single millstone tab
+module retainer_tab(
+width,
+depth,
+height,
+) {
+    rotate([90, 0, 0])
+        linear_extrude(width, center = true)
+            polygon(points = [[0, 0], [depth, 0], [0, height]]);
 }
 
 // Create the bottom cylinder from segments with integrated holders and retainer tabs
@@ -367,34 +348,24 @@ height_clearance = 0.1
 ) {
     // Local parameter definitions for better readability
     holder_segment_width = 60;     // Angular width of holder segments at 0° and 180°
+    holder_segments_angle = [0, 180]; // Angles for holder segments
     retainer_segment_width = 30;   // Angular width of retainer segments at 90° and 270°
-    closed_gap_width = 0.75;       // Width of horizontal slots
-
+    retainer_tab_angles = [90, 270]; // Angles for retainer segments
     // Create the holder segments at 0° and 180°
     color("Purple") {
         // Holder at 0°
-        rotate([0, 0, 0])
+        for (angle = holder_segments_angle)
+        rotate([0, 0, angle])
             millstone_holder_segment(angle_width = holder_segment_width);
 
-        // Holder at 180°
-        rotate([0, 0, 180])
-            millstone_holder_segment(angle_width = holder_segment_width);
     }
 
     // Create the retainer tab segments at 90° and 270° with horizontal slots
     color("Lime") {
-        // Retainer at 90°
-        rotate([0, 0, 90])
+        for (angle = retainer_tab_angles)
+        rotate([0, 0, angle])
             millstone_retainer_tab_segment(
-            angle_width = retainer_segment_width,
-            closed_gap_width = closed_gap_width
-            );
-
-        // Retainer at 270°
-        rotate([0, 0, 270])
-            millstone_retainer_tab_segment(
-            angle_width = retainer_segment_width,
-            closed_gap_width = closed_gap_width
+            angle_width = retainer_segment_width
             );
     }
 
@@ -507,48 +478,6 @@ bottom_height_val = bottom_height
 
     // Bottom section components
     bottom_parts();
-}
-
-
-// Create a single flexibility slit
-module create_slit(
-width = 0.75,
-height = 4,
-depth = bottom_height + 2 * 0.05, // Add clearance to cylinder height
-clearance = 0.05
-) {
-    cube([width, height, depth]);
-}
-
-// Create a pair of slits with specified spacing
-module create_slit_pair(
-width = 0.75,
-height = 4,
-depth = bottom_height + 2 * 0.05,
-spacing = 8.25
-) {
-    union() {
-        for (position = [0, spacing]) {
-            translate([position, 0, 0])
-                create_slit(width, height, depth);
-        }
-    }
-}
-
-// Legacy slit creation function - now uses horizontal slots instead of vertical slits
-// This is maintained for backward compatibility but not actually used anymore
-module legacy_millstone_slit_at_angle(
-offset_x = -4.5,
-center_radius = 25,
-y_offset = 1.5,
-width = 0.75,
-height = 0.75, // Height of horizontal slit (was vertical slit width)
-spacing = 8.25,
-cylinder_height = bottom_height
-) {
-    // This module is no longer needed as we've switched to horizontal slots
-    // in the millstone_retainer_tab_segment module
-    // This is kept for backward compatibility
 }
 
 // Create a single top cutout (currently disabled in the original code)
