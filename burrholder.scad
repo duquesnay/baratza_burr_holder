@@ -23,7 +23,7 @@ top_ring2_outer_radius = bottom_radius + 2;
 // Parameters for upper tabs
 rubber_tab_width = 2;
 rubber_tab_height = 3;  // Added to shoulder_height
-upper_tab_angles = [45, 225];  // Angles around the circle where tabs are placed
+rubber_tab_angles = [45, 225];  // Angles around the circle where tabs are placed
 
 // Heights - Sections
 top_rings_height = 5;
@@ -68,24 +68,6 @@ module beveled_tube(h, or, ir, tb = 0, bb = 0) {
     }
 }
 
-
-//     if (b < 0) {
-//        // Create a cylinder with a beveled bottom
-//        b = -b;
-//        union() {
-//            translate([0, 0, b])
-//                cylinder(h = h - b, r = r);
-//            cylinder(h = b, r1 = r - b, r2 = r);
-//        }
-//    } else {
-//        // Create a cylinder with bevel top
-//        union() {
-//            cylinder(h = h - b, r = r);
-//            translate([0, 0, h - b])
-//                cylinder(h = b, r1 = r, r2 = r - b);
-//        }
-//    }
-
 // Stable tube/ring module using only core OpenSCAD functions
 // Parameters:
 // h = height of the tube
@@ -101,8 +83,8 @@ module stable_tube(h, or1, ir1, or2 = undef, ir2 = undef, fn = $fn) {
 
     // Input validation
     assert(h > 0, str("Height must be positive: ", h));
-    assert(or1 > ir1, "Outer radius must be greater than inner radius at bottom");
-    assert(or2_actual > ir2_actual, "Outer radius must be greater than inner radius at top");
+    assert(or1 >= ir1, "Outer radius must be greater than inner radius at bottom");
+    assert(or2_actual >= ir2_actual, "Outer radius must be greater than inner radius at top");
 
     // Create a 2D profile and rotate it around the Z axis
     rotate_extrude(angle = 360, $fn = fn) {
@@ -139,9 +121,6 @@ height = top_rings_height
 module top_ring2(
 height = top_rings_height,
 base_spacing = top_rings_spacing, // should be refreing to connector origin
-connector_positions = upper_tab_angles,
-connector_width = rubber_tab_width,
-connector_height = rubber_tab_height,
 outer_radius = top_ring2_outer_radius  // Same as shoulder outer_radius default
 ) {
     inner_radius = base_spacing + top_ring1_outer_radius;
@@ -167,18 +146,6 @@ outer_radius = top_ring2_outer_radius  // Same as shoulder outer_radius default
 
     }
 
-
-
-
-    // Add connectors at exactly the same positions as the original tabs
-    // with the original connector height
-    for (angle = connector_positions) {
-        rotate([0, 0, angle])
-            translate([-connector_width / 2, top_ring1_inner_radius, 0])
-                cube([connector_width, top_ring1_outer_radius - top_ring1_inner_radius + base_spacing, connector_height]
-                );
-    }
-
 }
 
 // Create the shoulder transition part with reinforcement
@@ -191,9 +158,6 @@ outer_radius = bottom_radius
 ) {
     bevel = top_rings_spacing;
     tube(h = height, or = outer_radius, ir = inner_radius, center = false);
-//    translate([0, 0, height])
-//        tube(h = bevel, or = top_ring1_outer_radius + bevel, ir1 = top_ring1_outer_radius, ir2 =
-//            top_ring1_outer_radius + bevel, center = false);
 }
 
 // Parameters for middle tab thread
@@ -458,17 +422,37 @@ tabs_position = middle_tabs_position,
 
         // Shoulder transition
         color("blue")
-            shoulder( shoulder = shoulder_height);
+            shoulder(height = shoulder_height);
 
     }
 
     translate([0, 0, bottom_height + shoulder_height]) {
-        // Top cylinder
+        // inner ring
         color("green")
             top_ring1();
-        // Upper ring around the top cylinder
-        //        color("red")
-        //            top_ring2();
+        // Outer ring
+        color("red")
+            top_ring2();
+
+        color("pink") {
+
+            // Add connectors at exactly the same positions as the original tabs
+            // with the original connector height
+            for (angle = rubber_tab_angles) {
+                rotate([0, 0, angle])
+                    translate([-rubber_tab_width / 2, top_ring1_inner_radius, 0])
+                        cube(size = [rubber_tab_width, top_ring1_outer_radius - top_ring1_inner_radius +
+                            top_rings_spacing,
+                            rubber_tab_height]
+                        );
+            }
+
+            bevel = top_rings_spacing;
+
+//            //             creating a bevel for the overhang under the rubber
+//            stable_tube(h = bevel, or1 = top_ring1_outer_radius + bevel, ir1 = top_ring1_outer_radius, ir2 =
+//                top_ring1_outer_radius + bevel);
+        }
     }
 
     // Middle section - threaded tabs
